@@ -10,6 +10,22 @@
 	===========================================================================
 #>
 
+$filterParameter = @(
+	"Verbose",
+	"Debug",
+	"ErrorAction",
+	"WarningAction",
+	"InformationAction",
+	"ErrorVariable",
+	"WarningVariable",
+	"InformationVariable",
+	"OutVariable",
+	"OutBuffer",
+	"PipelineVariable",
+	"WhatIf",
+	"Confirm"
+)
+
 $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
 
@@ -88,7 +104,7 @@ function Set-WooCommerceCredential
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
-				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+				Authorization	  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
 		}
@@ -258,7 +274,59 @@ function Get-WooCommerceProduct
 	}
 }
 
+function Set-WooCommerceProduct
+{
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	param
+	(
+		[Parameter(Mandatory = $true,
+				   Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[ValidateNotNullOrEmpty()]
+		[System.String]$price,
+		[ValidateNotNullOrEmpty()]
+		[System.String]$name,
+		[ValidateNotNullOrEmpty()]
+		[System.String]$description,
+		[ValidateNotNullOrEmpty()]
+		[System.String]$short_description
+	)
+	if ($pscmdlet.ShouldProcess("Modify product $id"))
+	{
+		$query = @{ }
+		$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
+		
+		$CommandName = $PSCmdlet.MyInvocation.InvocationName
+		$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+		
+		foreach ($Parameter in $ParameterList)
+		{
+			$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+			if ($var.Value -match "\d|\w")
+			{
+				$query += @{ $var.Name = $var.Value }
+			}
+		}
+		if ($query.Count -gt 0)
+		{
+			$query
+			$json = $query | ConvertTo-Json
+			$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json
+			if ($result)
+			{
+				return $result
+			}
+		}
+		else
+		{
+			Write-Error -Message "No value provided" -Category InvalidData
+		}
+	}
+}
+
 Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,
 					New-WooCommerceProduct,
-					Set-WooCommerceCredential
+					Set-WooCommerceCredential,
+					Set-WooCommerceProduct
