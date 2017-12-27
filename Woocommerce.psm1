@@ -14,9 +14,19 @@ $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
 
 <#
-	Get and Set Credentials and Uri
+	.SYNOPSIS
+		Check for the WooCommerce credentials and uri
+	
+	.DESCRIPTION
+		Check the local variables, if the WooCommerce Base-Authentication and uri is provided to connecto to the remote uri
+	
+	.EXAMPLE
+		PS C:\> Get-WooCommerceCredential
+	
+	.NOTES
+		Additional information about the function.
 #>
-function Get-WooCommerceCredentials
+function Get-WooCommerceCredential
 {
 	if ($script:woocommerceUrl -and $script:woocommerceBase64AuthInfo)
 	{
@@ -29,27 +39,37 @@ function Get-WooCommerceCredentials
 	}
 }
 
-function Set-WooCommerceCredentials
+function Set-WooCommerceCredential
 {
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	[OutputType([string])]
 	param
 	(
 		[System.String]$url,
 		[System.String]$apiKey,
 		[System.String]$apiSecret
 	)
-	Try
+	
+	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
-		$result = Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop
-		$script:woocommerceApiSecret = $apiSecret
-		$script:woocommerceApiKey = $apiKey
-		$script:woocommerceBase64AuthInfo = @{
-			Authorization  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
-		}
-		$script:woocommerceUrl = $url
+		$url
 	}
-	catch
+	else
 	{
-		Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+		Try
+		{
+			Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			$script:woocommerceApiSecret = $apiSecret
+			$script:woocommerceApiKey = $apiKey
+			$script:woocommerceBase64AuthInfo = @{
+				Authorization	  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+			}
+			$script:woocommerceUrl = $url
+		}
+		catch
+		{
+			Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+		}
 	}
 }
 
@@ -60,7 +80,7 @@ function Get-WooCommerceOrder
 		[switch]$all,
 		[System.String]$id
 	)
-	if (Get-WooCommerceCredentials)
+	if (Get-WooCommerceCredential)
 	{
 		$url = "$script:woocommerceUrl/$script:woocommerceOrder"
 		if ($id -and !$all)
@@ -101,6 +121,7 @@ function Get-WooCommerceProduct
 
 function New-WooCommerceProduct
 {
+	[CmdletBinding(SupportsShouldProcess = $true)]
 	param
 	(
 		[double]$price,
@@ -109,22 +130,30 @@ function New-WooCommerceProduct
 		[System.String]$shortDescription,
 		[System.String]$type = "simple"
 	)
-	$query = @{
-		"name"    = "$name"
-		"type"    = "$type"
-		"regular_price" = "$($price -replace ",", ".")"
-		"description" = "$description"
-		"short_description" = "$shortDescription"
-	}
-	$json = $query | ConvertTo-Json
-	$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo
-	if ($result)
+	
+	If ($PSCmdlet.ShouldProcess("Create a new product"))
 	{
-		return $result
+		$script:woocommerceUrl
+	}
+	else
+	{
+		$query = @{
+			"name"	   = "$name"
+			"type"	   = "$type"
+			"regular_price" = "$($price -replace ",", ".")"
+			"description" = "$description"
+			"short_description" = "$shortDescription"
+		}
+		$json = $query | ConvertTo-Json
+		$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json
+		if ($result)
+		{
+			return $result
+		}
 	}
 }
 
 Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,
 					New-WooCommerceProduct,
-					Set-WooCommerceCredentials
+					Set-WooCommerceCredential
