@@ -104,7 +104,7 @@ function Set-WooCommerceCredential
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
-				Authorization	  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
 		}
@@ -214,18 +214,21 @@ function New-WooCommerceProduct
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
 	{
-		$query = @{
-			"name"	   = "$name"
-			"type"	   = "$type"
-			"regular_price" = "$($price -replace ",", ".")"
-			"description" = "$description"
-			"short_description" = "$briefDescription"
-		}
-		$json = $query | ConvertTo-Json
-		$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
-		if ($result)
+		if (Get-WooCommerceCredential)
 		{
-			return $result
+			$query = @{
+				"name"	   = "$name"
+				"type"	   = "$type"
+				"regular_price" = "$($price -replace ",", ".")"
+				"description" = "$description"
+				"short_description" = "$briefDescription"
+			}
+			$json = $query | ConvertTo-Json
+			$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
+			if ($result)
+			{
+				return $result
+			}
 		}
 	}
 }
@@ -274,6 +277,34 @@ function Get-WooCommerceProduct
 	}
 }
 
+<#
+	.SYNOPSIS
+		Modifys a WooCommerce product
+	
+	.DESCRIPTION
+		Modifys a WooCommerce product with the specified parameters
+	
+	.PARAMETER id
+		A description of the id parameter.
+	
+	.PARAMETER price
+		Set the price of your product
+	
+	.PARAMETER name
+		Provide a name for your product
+	
+	.PARAMETER description
+		Provide a description of your product
+	
+	.PARAMETER short_description
+		Provide a brief description of the product
+	
+	.EXAMPLE
+		PS C:\> Set-WooCommerceProduct -id 'Value1'
+	
+	.NOTES
+		Additional information about the function.
+#>
 function Set-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
@@ -292,34 +323,38 @@ function Set-WooCommerceProduct
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description
 	)
+	
 	if ($pscmdlet.ShouldProcess("Modify product $id"))
 	{
-		$query = @{ }
-		$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
-		
-		$CommandName = $PSCmdlet.MyInvocation.InvocationName
-		$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
-		
-		foreach ($Parameter in $ParameterList)
+		if (Get-WooCommerceCredential)
 		{
-			$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
-			if ($var.Value -match "\d|\w")
+			$query = @{ }
+			$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
+			
+			$CommandName = $PSCmdlet.MyInvocation.InvocationName
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+			
+			foreach ($Parameter in $ParameterList)
 			{
-				$query += @{ $var.Name = $var.Value }
+				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+				if ($var.Value -match "\d|\w")
+				{
+					$query += @{ $var.Name = $var.Value }
+				}
 			}
-		}
-		if ($query.Count -gt 0)
-		{
-			$json = $query | ConvertTo-Json
-			$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
-			if ($result)
+			if ($query.Count -gt 0)
 			{
-				return $result
+				$json = $query | ConvertTo-Json
+				$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
+				if ($result)
+				{
+					return $result
+				}
 			}
-		}
-		else
-		{
-			Write-Error -Message "No value provided" -Category InvalidData
+			else
+			{
+				Write-Error -Message "No value provided" -Category InvalidData
+			}
 		}
 	}
 }
