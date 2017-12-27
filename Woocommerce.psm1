@@ -222,7 +222,7 @@ function New-WooCommerceProduct
 			"short_description" = "$briefDescription"
 		}
 		$json = $query | ConvertTo-Json
-		$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json
+		$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
 		if ($result)
 		{
 			return $result
@@ -310,9 +310,8 @@ function Set-WooCommerceProduct
 		}
 		if ($query.Count -gt 0)
 		{
-			$query
 			$json = $query | ConvertTo-Json
-			$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json
+			$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
 			if ($result)
 			{
 				return $result
