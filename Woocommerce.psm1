@@ -14,9 +14,19 @@ $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
 
 <#
-	Get and Set Credentials and Uri
+	.SYNOPSIS
+		Check for the WooCommerce credentials and uri
+	
+	.DESCRIPTION
+		Check the local variables, if the WooCommerce Base-Authentication and uri is provided to connect to the remote uri
+	
+	.EXAMPLE
+		PS C:\> Get-WooCommerceCredential
+	
+	.NOTES
+		Additional information about the function.
 #>
-function Get-WooCommerceCredentials
+function Get-WooCommerceCredential
 {
 	if ($script:woocommerceUrl -and $script:woocommerceBase64AuthInfo)
 	{
@@ -29,38 +39,97 @@ function Get-WooCommerceCredentials
 	}
 }
 
-function Set-WooCommerceCredentials
+<#
+	.SYNOPSIS
+		A brief description of the Set-WooCommerceCredential function.
+	
+	.DESCRIPTION
+		A detailed description of the Set-WooCommerceCredential function.
+	
+	.PARAMETER url
+		The url of your WooCommerce installation
+	
+	.PARAMETER apiKey
+		The api Key provided by WooCommerce
+	
+	.PARAMETER apiSecret
+		The api secret provided by WooCommerce
+	
+	.EXAMPLE
+		PS C:\> Set-WooCommerceCredential -url 'Value1' -apiKey 'Value2' -apiSecret 'Value3'
+	
+	.NOTES
+		Additional information about the function.
+#>
+function Set-WooCommerceCredential
 {
+	[CmdletBinding(SupportsShouldProcess = $true)]
 	param
 	(
+		[Parameter(Mandatory = $true,
+				   Position = 1)]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$url,
+		[Parameter(Mandatory = $true,
+				   Position = 2)]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$apiKey,
+		[Parameter(Mandatory = $true,
+				   Position = 3)]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$apiSecret
 	)
-	Try
+	
+	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
-		$result = Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop
-		$script:woocommerceApiSecret = $apiSecret
-		$script:woocommerceApiKey = $apiKey
-		$script:woocommerceBase64AuthInfo = @{
-			Authorization  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+		Try
+		{
+			Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			$script:woocommerceApiSecret = $apiSecret
+			$script:woocommerceApiKey = $apiKey
+			$script:woocommerceBase64AuthInfo = @{
+				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+			}
+			$script:woocommerceUrl = $url
 		}
-		$script:woocommerceUrl = $url
-	}
-	catch
-	{
-		Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+		catch
+		{
+			Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+		}
 	}
 }
 
+<#
+	.SYNOPSIS
+		Return a list of WooCommerce orders
+	
+	.DESCRIPTION
+		Returns a list or a single WooCommerce order based on the parameters provided
+	
+	.PARAMETER id
+		The id of your WooCommerce order
+	
+	.PARAMETER all
+		Return all orders if nothing is set or if explicitly set
+	
+	.EXAMPLE
+		PS C:\> Get-WooCommerceOrder
+	
+	.NOTES
+		Additional information about the function.
+#>
 function Get-WooCommerceOrder
 {
 	param
 	(
-		[switch]$all,
-		[System.String]$id
+		[Parameter(Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[Parameter(Position = 2)]
+		[switch]$all
 	)
-	if (Get-WooCommerceCredentials)
+	
+	if (Get-WooCommerceCredential)
 	{
 		$url = "$script:woocommerceUrl/$script:woocommerceOrder"
 		if ($id -and !$all)
@@ -76,55 +145,120 @@ function Get-WooCommerceOrder
 }
 
 <#
-    Products
+	.SYNOPSIS
+		Creates a new WooCommerce product
+	
+	.DESCRIPTION
+		Creates a new WooCommerce product with the specified parameters
+	
+	.PARAMETER price
+		Set the price of your product
+	
+	.PARAMETER name
+		Provide a name for your product
+	
+	.PARAMETER description
+		Provide a description of your product
+	
+	.PARAMETER briefDescription
+		Provide a brief description of the product
+	
+	.PARAMETER type
+		Defines the type of the product, avaible types are:
+		simple, grouped, external and variable.
+		Default is simple
+	
+	.EXAMPLE
+				PS C:\> New-WooCommerceProduct -price $value1 -name 'Value2' -description 'Value3' -briefDescription 'Value4'
+	
+	.NOTES
+		Additional information about the function.
+#>
+function New-WooCommerceProduct
+{
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	param
+	(
+		[Parameter(Mandatory = $true)]
+		[ValidateNotNullOrEmpty()]
+		[double]$price,
+		[Parameter(Mandatory = $true)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$name,
+		[Parameter(Mandatory = $true)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$description,
+		[Parameter(Mandatory = $true)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$briefDescription,
+		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$type = 'simple'
+	)
+	
+	If ($PSCmdlet.ShouldProcess("Create a new product"))
+	{
+		$query = @{
+			"name"	   = "$name"
+			"type"	   = "$type"
+			"regular_price" = "$($price -replace ",", ".")"
+			"description" = "$description"
+			"short_description" = "$briefDescription"
+		}
+		$json = $query | ConvertTo-Json
+		$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json
+		if ($result)
+		{
+			return $result
+		}
+	}
+}
+
+<#
+	.SYNOPSIS
+		Return a list of WooCommerce products
+	
+	.DESCRIPTION
+		Returns a list or a single WooCommerce product based on the parameters provided
+	
+	.PARAMETER all
+		Return all products if nothing is set or if explicitly set
+	
+	.PARAMETER id
+		The id of your WooCommerce product
+	
+	.EXAMPLE
+		PS C:\> Get-WooCommerceProduct
+	
+	.NOTES
+		Additional information about the function.
 #>
 function Get-WooCommerceProduct
 {
 	param
 	(
-		[switch]$all,
-		[System.String]$id
+		[Parameter(Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[Parameter(Position = 2)]
+		[switch]$all
 	)
-	if ($id)
+	if (Get-WooCommerceCredential)
 	{
-		$result = Invoke-RestMethod -Method GET -Uri "$script:woocommerceUrl/$script:woocommerceProducts/$id" -Headers $script:woocommerceBase64AuthInfo
-	}
-	elseif ($all)
-	{
-		$result = Invoke-RestMethod -Method GET -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo
-	}
-	if ($result)
-	{
-		return $result
-	}
-}
-
-function New-WooCommerceProduct
-{
-	param
-	(
-		[double]$price,
-		[System.String]$name,
-		[System.String]$description,
-		[System.String]$shortDescription,
-		[System.String]$type = "simple"
-	)
-	$query = @{
-		"name"    = "$name"
-		"type"    = "$type"
-		"regular_price" = "$($price -replace ",", ".")"
-		"description" = "$description"
-		"short_description" = "$shortDescription"
-	}
-	$json = $query | ConvertTo-Json
-	$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo
-	if ($result)
-	{
-		return $result
+		$url = "$script:woocommerceUrl/$script:woocommerceProducts"
+		if ($id -and !$all)
+		{
+			$url += "/$id"
+		}
+		$result = Invoke-RestMethod -Method GET -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+		if ($result)
+		{
+			return $result
+		}
 	}
 }
 
 Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,
 					New-WooCommerceProduct,
-					Set-WooCommerceCredentials
+					Set-WooCommerceCredential

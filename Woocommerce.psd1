@@ -19,7 +19,7 @@
 	ModuleToProcess = 'Woocommerce.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.0.0.0'
+	ModuleVersion = '1.0.0.1'
 	
 	# ID used to uniquely identify this module
 	GUID = '5455e4ea-11e5-48eb-bd6a-e2855ae12008'
@@ -37,7 +37,7 @@
 	Description = 'Module description'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
-	PowerShellVersion = '2.0'
+	PowerShellVersion = '3.0'
 	
 	# Name of the Windows PowerShell host required by this module
 	PowerShellHostName = ''
