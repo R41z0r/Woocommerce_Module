@@ -1,0 +1,11 @@
+﻿<Project>
+	<Version>2.0</Version>
+	<FileID>5455e4ea-11e5-48eb-bd6a-e2855ae12008</FileID>
+	<ProjectType>1</ProjectType>
+	<Files>
+		<File Build="0">Woocommerce.psd1</File>
+		<File Build="0">Woocommerce.psm1</File>
+		<File Build="1">Test-Module.ps1</File>
+	</Files>
+	<StartupScript>Test-Module.ps1</StartupScript>
+</Project>
