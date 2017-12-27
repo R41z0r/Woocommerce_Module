@@ -42,7 +42,6 @@ function Get-WooCommerceCredential
 function Set-WooCommerceCredential
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	[OutputType([string])]
 	param
 	(
 		[System.String]$url,
@@ -52,17 +51,13 @@ function Set-WooCommerceCredential
 	
 	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
-		$url
-	}
-	else
-	{
 		Try
 		{
 			Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
-				Authorization	  = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
 		}
@@ -132,10 +127,6 @@ function New-WooCommerceProduct
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
-	{
-		$script:woocommerceUrl
-	}
-	else
 	{
 		$query = @{
 			"name"	   = "$name"
