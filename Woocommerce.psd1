@@ -2,7 +2,7 @@
 	===========================================================================
 	 Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2017 v5.4.145
 	 Created on:   	27.12.2017 08:40
-	 Created by:   	DV48441
+	 Created by:   	R41Z0R
 	 Organization: 	
 	 Filename:     	Woocommerce.psd1
 	 -------------------------------------------------------------------------
