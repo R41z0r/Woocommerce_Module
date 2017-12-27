@@ -23,7 +23,7 @@
 
 
 #Explicitly import the module for testing
-Import-Module 'Woocommerce'
+Import-Module 'Woocommerce' -Force
 
 #Run each module function
 Write-HelloWorld
