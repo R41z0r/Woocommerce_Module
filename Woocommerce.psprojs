@@ -2,9 +2,5 @@
   <Version>1.0</Version>
   <FileID>5455e4ea-11e5-48eb-bd6a-e2855ae12008</FileID>
   <OpenFolders />
-  <OpenFiles>
-    <File>Test-Module.ps1</File>
-    <File>Woocommerce.psd1</File>
-    <File>Woocommerce.psm1</File>
-  </OpenFiles>
+  <OpenFiles />
 </ProjectState>
