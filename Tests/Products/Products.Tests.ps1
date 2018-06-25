@@ -52,9 +52,10 @@ Describe "New-WooCommerceProduct" {
             $date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(1) -Format s)"
             $date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(3) -Format s)"
 
-            $newProduct = New-WooCommerceProduct -name $name -regular_price $price `
-                -description $description -short_description $shortDescription -type $type -status $status `
-                -featured $featured -catalog_visibility $catalog_visibility
+            $newProduct = New-WooCommerceProduct -name $name -type $type `
+                -description $description -short_description $shortDescription -status $status `
+                -slug $slug -featured $featured -catalog_visibility $catalog_visibility -regular_price $price `
+                -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to
 
             $newProduct | Should -not -BeNullOrEmpty
             $newProduct | Should -HaveCount 1
