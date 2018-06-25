@@ -4,8 +4,8 @@
   <ProjectType>1</ProjectType>
   <Folders />
   <Files>
-    <File Build="2">Woocommerce.psd1</File>
-    <File Build="0">Woocommerce.psm1</File>
+    <File Build="2">Woocommerce\Woocommerce.psd1</File>
+    <File Build="0">Woocommerce\Woocommerce.psm1</File>
   </Files>
   <StartupScript>C:\Users\xv48441\Documents\Git\Woocommerce\Test-Module.ps1</StartupScript>
 </Project>

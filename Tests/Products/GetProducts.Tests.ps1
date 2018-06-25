@@ -5,30 +5,40 @@ if(-not $PSScriptRoot)
 }
 
 $PSVersion = $PSVersionTable.PSVersion.Major
-Import-Module -Force $PSScriptRoot\..\PSDiskPart
+$script:consumerKey = "ck_4152c4f7449ceff479498be90607bb905761d9b1"
+$script:cosumerSecret = "cs_e8e8bf615e8cc3fcf56415ace8d8c04a04551ab6"
+$script:url = "https://cloudra.de"
 
+Import-Module -Force $PSScriptRoot\..\..\Woocommerce
 
-#This is more appropriate for context, but we include PSVersion in the It blocks to differentiate in AppVeyor
-Describe "Invoke-DiskPartScript"  {
+Set-WooCommerceCredential -url $script:url -apiKey $script:consumerKey -apiSecret $script:cosumerSecret
+
+Describe "Get-WooCommerceProduct"  {
     
-    Context "Strict mode" { 
+    Context "All Products" { 
 
         Set-StrictMode -Version latest
 
-        It "Should list disks on a local system PS$PSVersion" {
+        It "Should list all Products in WooCommerce" {
+            Get-WooCommerceProduct -all | Should -Not -BeNullOrEmpty  
+        }
+    }
 
-            $OutString = Invoke-DiskPartScript -ComputerName $env:COMPUTERNAME -DiskPartText "list disk" -Raw
-            $OutArray = ($OutString -split "`n") | Where-Object { $_ -match "[A-Za-z0-9]"}
-            
-            #Hopefully you have at least one disk.
-            $OutArray.Count | Should BeGreaterThan 4
+    Context "One Product" {
+        Set-StrictMode -Version latest
 
-            #Is this different on other versions of Windows?  Is there a better regex?
-            $OutString | Should Match "\s*Disk ###\s*Status\s*Size\s*Free.*"
+        It "Should list a specific Product in WooCommerce" {
+            $orderID = Get-WooCommerceProduct -all | Select-Object -First 1 | Select-Object -ExpandProperty ID
+
+            #Maximim one item should be inside
+            $orderID | Should -HaveCount 1
+
+            Get-WooCommerceProduct -id $orderID | Should -HaveCount 1
         }
     }
 }
 
+<#
 Describe "Get-DiskPartDisk" {
     
     Context "Strict mode" { 
@@ -67,3 +77,4 @@ Describe "Get-DiskPartVolume"  {
         }
     }
 }
+#>
