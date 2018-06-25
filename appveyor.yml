@@ -35,4 +35,3 @@ test_script:
       Else {
         Update-AppveyorTest -Name "PsScriptAnalyzer" -Outcome Passed
       }
-
