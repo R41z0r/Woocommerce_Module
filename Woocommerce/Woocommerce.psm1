@@ -167,8 +167,8 @@ function Get-WooCommerceOrder
 	.DESCRIPTION
 		Creates a new WooCommerce product with the specified parameters
 	
-	.PARAMETER price
-		Set the price of your product
+	.PARAMETER regular_price
+		Set the regular_price of your product
 	
 	.PARAMETER name
 		Provide a name for your product
@@ -176,7 +176,7 @@ function Get-WooCommerceOrder
 	.PARAMETER description
 		Provide a description of your product
 	
-	.PARAMETER briefDescription
+	.PARAMETER short_description
 		Provide a brief description of the product
 	
 	.PARAMETER type
@@ -184,8 +184,22 @@ function Get-WooCommerceOrder
 		simple, grouped, external and variable.
 		Default is simple
 	
+	.PARAMETER status
+		Defines the status of the product:
+		draft, pending, private or publish
+	
+	.PARAMETER slug
+		Slug is used for permalink, define property for custom permalink
+	
+	.PARAMETER featured
+		Set the product as a featured product
+	
+	.PARAMETER catalog_visibility
+		Defines the visibility to the catalog
+		visible, catalog, search, hidden
+	
 	.EXAMPLE
-				PS C:\> New-WooCommerceProduct -price $value1 -name 'Value2' -description 'Value3' -briefDescription 'Value4'
+		PS C:\> New-WooCommerceProduct -regular_price $value1 -name 'Value2' -description 'Value3' -short_description 'Value4'
 	
 	.NOTES
 		Additional information about the function.
@@ -197,7 +211,7 @@ function New-WooCommerceProduct
 	(
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
-		[double]$price,
+		[double]$regular_price,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
@@ -206,25 +220,43 @@ function New-WooCommerceProduct
 		[System.String]$description,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
-		[System.String]$briefDescription,
-		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[System.String]$short_description,
 		[ValidateNotNullOrEmpty()]
-		[System.String]$type = 'simple'
+		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[System.String]$type = 'simple',
+		[ValidateNotNullOrEmpty()]
+		[ValidateSet('draft', 'pending', 'private', 'publish')]
+		[System.String]$status = 'publish',
+		[ValidateNotNullOrEmpty()]
+		[System.String]$slug,
+		[ValidateNotNullOrEmpty()]
+		[ValidateSet('false', 'true')]
+		[System.String]$featured = 'false',
+		[ValidateNotNullOrEmpty()]
+		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
+		[System.String]$catalog_visibility = 'visible'
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
 	{
 		if (Get-WooCommerceCredential)
 		{
-			$query = @{
-				"name"	   = "$name"
-				"type"	   = "$type"
-				"regular_price" = "$($price -replace ",", ".")"
-				"description" = "$description"
-				"short_description" = "$briefDescription"
+			$query = @{ }
+			$url = "$script:woocommerceUrl/$script:woocommerceProducts"
+			
+			$CommandName = $PSCmdlet.MyInvocation.InvocationName
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+			
+			foreach ($Parameter in $ParameterList)
+			{
+				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+				if ($var.Value -match "\d|\w")
+				{
+					$query += @{ $var.Name = $var.Value }
+				}
 			}
 			$json = $query | ConvertTo-Json
-			$result = Invoke-RestMethod -Method POST -Uri "$script:woocommerceUrl/$script:woocommerceProducts" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
+			$result = Invoke-RestMethod -Method POST -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
 			if ($result)
 			{
 				return $result
@@ -279,6 +311,55 @@ function Get-WooCommerceProduct
 
 <#
 	.SYNOPSIS
+		Remove the provided WooCommerce product
+	
+	.DESCRIPTION
+		Remove the provided WooCommerce product
+	
+	.PARAMETER id
+		The id of the WooCommerce product to remove
+	
+	.PARAMETER permanently
+		If set, the product will be deleted permanently
+	
+	.EXAMPLE
+		PS C:\> Remove-WooCommerceProduct -id 'Value1'
+	
+	.NOTES
+		Additional information about the function.
+#>
+function Remove-WooCommerceProduct
+{
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	param
+	(
+		[Parameter(Mandatory = $true,
+				   Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[switch]$permanently = $false
+	)
+	
+	if ($pscmdlet.ShouldProcess("Remove product $id"))
+	{
+		if (Get-WooCommerceCredential)
+		{
+			$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
+			if ($permanently)
+			{
+				$url += "?force=true"
+			}
+			$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+			if ($result)
+			{
+				Write-Output -InputObject "Successfully deleted ID: $id - Name: $($result.name)"
+			}
+		}
+	}
+}
+
+<#
+	.SYNOPSIS
 		Modifys a WooCommerce product
 	
 	.DESCRIPTION
@@ -315,7 +396,7 @@ function Set-WooCommerceProduct
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[ValidateNotNullOrEmpty()]
-		[System.String]$price,
+		[System.String]$regular_price,
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
 		[ValidateNotNullOrEmpty()]
@@ -363,4 +444,5 @@ Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,
 					New-WooCommerceProduct,
 					Set-WooCommerceCredential,
-					Set-WooCommerceProduct
+					Set-WooCommerceProduct,
+					Remove-WooCommerceProduct
