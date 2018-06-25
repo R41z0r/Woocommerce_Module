@@ -5,7 +5,7 @@ if(-not $PSScriptRoot)
 }
 
 $PSVersion = $PSVersionTable.PSVersion.Major
-Import-Module -Force $PSScriptRoot\..\PSDiskPart
+Import-Module -Force $PSScriptRoot\..\Woocommerce
 
 
 #This is more appropriate for context, but we include PSVersion in the It blocks to differentiate in AppVeyor
