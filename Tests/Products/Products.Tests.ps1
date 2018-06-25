@@ -17,10 +17,6 @@ Describe "New-WooCommerceProduct" {
     Context "New simple Product" {
         Set-StrictMode -Version latest
 
-        It "Should throw an error" {
-            New-WooCommerceProduct | Should -Throw
-        }
-
         It "Should create a new simple product" {
             New-WooCommerceProduct -name "TestPester" | Should -Not -BeNullOrEmpty
         }
@@ -34,6 +30,10 @@ Describe "New-WooCommerceProduct" {
         }
 
         It "Should create a new simple product with all attributes available" {
+            $hashFalseTrue = @{
+                "true" = $true
+                "false" = $false
+            }
             $price = 0.12
             $description = "ProductTest"
             $shortDescription = "ShortProductTest"
@@ -54,7 +54,7 @@ Describe "New-WooCommerceProduct" {
             $newProduct.short_description | Should -BeExactly $shortDescription
             $newProduct.status | Should -BeExactly $status
             $newProduct.type | Should -BeExactly $type
-            $newProduct.featured | Should -BeExactly $featured
+            $newProduct.featured | Should -BeExactly $hashFalseTrue["$featured"]
             $newProduct.catalog_visibility | Should -BeExactly $catalog_visibility
             $newProduct.name | Should -BeExactly $name
         }
