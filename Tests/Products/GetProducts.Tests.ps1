@@ -9,7 +9,7 @@ $script:consumerKey = "ck_4152c4f7449ceff479498be90607bb905761d9b1"
 $script:cosumerSecret = "cs_e8e8bf615e8cc3fcf56415ace8d8c04a04551ab6"
 $script:url = "https://cloudra.de"
 
-Import-Module -Force $PSScriptRoot\..\Woocommerce
+Import-Module -Force $PSScriptRoot\..\..\Woocommerce
 
 Set-WooCommerceCredential -url $script:url -apiKey $script:consumerKey -apiSecret $script:cosumerSecret
 
