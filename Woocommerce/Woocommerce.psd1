@@ -2,7 +2,7 @@
 	===========================================================================
 	 Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2017 v5.4.145
 	 Created on:   	27.12.2017 08:40
-	 Created by:   	DV48441
+	 Created by:   	R41Z0R
 	 Organization: 	
 	 Filename:     	Woocommerce.psd1
 	 -------------------------------------------------------------------------
@@ -19,7 +19,7 @@
 	ModuleToProcess = 'Woocommerce.psm1'
 	
 	# Version number of this module.
-	ModuleVersion = '1.1.0.0'
+	ModuleVersion = '1.1.1.0'
 	
 	# ID used to uniquely identify this module
 	GUID = '5455e4ea-11e5-48eb-bd6a-e2855ae12008'
