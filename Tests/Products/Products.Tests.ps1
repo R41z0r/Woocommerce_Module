@@ -1,7 +1,35 @@
+function Get-ScriptDirectory
+{
+<#
+	.SYNOPSIS
+		Get-ScriptDirectory returns the proper location of the script.
+
+	.OUTPUTS
+		System.String
+	
+	.NOTES
+		Returns the correct path within a packaged executable.
+#>
+	[OutputType([string])]
+	param ()
+	if ($null -ne $hostinvocation)
+	{
+		Split-Path $hostinvocation.MyCommand.path
+	}
+	else
+	{
+		Split-Path $script:MyInvocation.MyCommand.Path
+	}
+}
+
+#Sample variable that provides the location of the script
+
+
 #handle PS2
 if(-not $PSScriptRoot)
 {
-    $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
+    [string]$PSScriptRoot = Get-ScriptDirectory
+    #$PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
 $PSVersion = $PSVersionTable.PSVersion.Major
