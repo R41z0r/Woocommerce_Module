@@ -204,62 +204,67 @@ function Get-WooCommerceOrder
 	.NOTES
 		Additional information about the function.
 #>
-function New-WooCommerceProduct
+Function New-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	param
+	Param
 	(
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[double]$regular_price,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$description,
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description,
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('external', 'grouped', 'simple', 'variable')]
-		[System.String]$type = 'simple',
 		[ValidateNotNullOrEmpty()]
+		[System.String]$type = 'simple',
 		[ValidateSet('draft', 'pending', 'private', 'publish')]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$status = 'publish',
 		[ValidateNotNullOrEmpty()]
 		[System.String]$slug,
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('false', 'true')]
-		[System.String]$featured = 'false',
 		[ValidateNotNullOrEmpty()]
+		[System.String]$featured = 'false',
 		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$catalog_visibility = 'visible'
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
 	{
-		if (Get-WooCommerceCredential)
+		If (Get-WooCommerceCredential)
 		{
-			$query = @{ }
+			$query = @{
+			}
 			$url = "$script:woocommerceUrl/$script:woocommerceProducts"
 			
 			$CommandName = $PSCmdlet.MyInvocation.InvocationName
-			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -notin $filterParameter
+			}
 			
-			foreach ($Parameter in $ParameterList)
+			ForEach ($Parameter In $ParameterList)
 			{
 				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
-				if ($var.Value -match "\d|\w")
+				If ($var.Value -match "\d|\w")
 				{
-					$query += @{ $var.Name = $var.Value }
+					$query += @{
+						$var.Name  = "$($var.Value)"
+					}
 				}
 			}
 			$json = $query | ConvertTo-Json
 			$result = Invoke-RestMethod -Method POST -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
-			if ($result)
+			If ($result)
 			{
-				return $result
+				Return $result
 			}
 		}
 	}
