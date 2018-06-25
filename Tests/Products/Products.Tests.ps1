@@ -77,7 +77,7 @@ Describe "Get-WooCommerceProduct"  {
             $products = Get-WooCommerceProduct -all
             $products | Should -Not -BeNullOrEmpty
             ($products | Measure-Object).Count | Should -BeGreaterOrEqual ($script:wooCommerceProductsArray.Count)
-            $products.ID | ForEach-Object -Process { $PSItem | Should -BeIn $script:wooCommerceProductsArray }
+            $script:wooCommerceProductsArray | Should -BeIn $products.ID
         }
     }
 
