@@ -74,7 +74,10 @@ Describe "Get-WooCommerceProduct"  {
         Set-StrictMode -Version latest
 
         It "Should list all Products in WooCommerce" {
-            Get-WooCommerceProduct -all | Should -Not -BeNullOrEmpty  
+            $products = Get-WooCommerceProduct -all
+            $products | Should -Not -BeNullOrEmpty
+            ($products | Measure-Object).Count | Should -BeGreaterOrEqual ($script:wooCommerceProductsArray.Count)
+            $products.ID | Should -BeIn $script:wooCommerceProductsArray
         }
     }
 
@@ -82,12 +85,11 @@ Describe "Get-WooCommerceProduct"  {
         Set-StrictMode -Version latest
 
         It "Should list a specific Product in WooCommerce" {
-            $orderID = Get-WooCommerceProduct -all | Select-Object -First 1 | Select-Object -ExpandProperty ID
-
-            #Maximim one item should be inside
-            $orderID | Should -HaveCount 1
-
-            Get-WooCommerceProduct -id $orderID | Should -HaveCount 1
+            $script:wooCommerceProductsArray | Should -Not -BeNullOrEmpty
+            $product = Get-WooCommerceProduct -id $script:wooCommerceProductsArray[0]
+            $product | Should -not -BeNullOrEmpty
+            $product | Should -HaveCount 1
+            $product.ID | Should -BeExactly $script:wooCommerceProductsArray[0]
         }
     }
 }
@@ -95,11 +97,7 @@ Describe "Get-WooCommerceProduct"  {
 Describe "Remove-WooCommerceProduct" {
     Context "Delete one" {
         Set-StrictMode -Version latest
-
-        It "Should throw an error" {
-            Remove-WooCommerceProduct -id "0" | Should -Throw
-        }
-
+        
         It "Should move one Product to bin" {
             $script:wooCommerceProductsArray | Should -Not -BeNullOrEmpty
             $removedProduct = Remove-WooCommerceProduct -id $script:wooCommerceProductsArray[0]
