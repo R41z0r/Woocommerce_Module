@@ -204,21 +204,21 @@ function Get-WooCommerceOrder
 	.NOTES
 		Additional information about the function.
 #>
-function New-WooCommerceProduct
+Function New-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	param
+	Param
 	(
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[double]$regular_price,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$description,
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description,
 		[ValidateNotNullOrEmpty()]
@@ -239,27 +239,32 @@ function New-WooCommerceProduct
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
 	{
-		if (Get-WooCommerceCredential)
+		If (Get-WooCommerceCredential)
 		{
-			$query = @{ }
+			$query = @{
+			}
 			$url = "$script:woocommerceUrl/$script:woocommerceProducts"
 			
 			$CommandName = $PSCmdlet.MyInvocation.InvocationName
-			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -notin $filterParameter
+			}
 			
-			foreach ($Parameter in $ParameterList)
+			ForEach ($Parameter In $ParameterList)
 			{
 				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
-				if ($var.Value -match "\d|\w")
+				If ($var.Value -match "\d|\w")
 				{
-					$query += @{ $var.Name = $var.Value }
+					$query += @{
+						$var.Name   = "$($var.Value)"
+					}
 				}
 			}
 			$json = $query | ConvertTo-Json
 			$result = Invoke-RestMethod -Method POST -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
-			if ($result)
+			If ($result)
 			{
-				return $result
+				Return $result
 			}
 		}
 	}
@@ -352,7 +357,7 @@ function Remove-WooCommerceProduct
 			$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
 			if ($result)
 			{
-				Write-Output -InputObject "Successfully deleted ID: $id - Name: $($result.name)"
+				Return $result
 			}
 		}
 	}
