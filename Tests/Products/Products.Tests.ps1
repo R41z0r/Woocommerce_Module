@@ -45,17 +45,20 @@ Describe "New-WooCommerceProduct" {
             $shortDescription = "ShortProductTest"
             $status = "draft"
             $slug = "test"
-            $featured = "false"
+            $featured = "$([System.String]([boolean](Get-Random 0,1)))"
             $catalog_visibility = "hidden"
             $price = 0.12
             $sale_price = 0.05
             $date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(1) -Format s)"
             $date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(3) -Format s)"
+            $virtual = "$([System.String]([boolean](Get-Random 0,1)))"
+            $downloadable = "$([System.String]([boolean](Get-Random 0,1)))"
 
             $newProduct = New-WooCommerceProduct -name $name -type $type `
                 -description $description -short_description $shortDescription -status $status `
                 -slug $slug -featured $featured -catalog_visibility $catalog_visibility -regular_price $price `
-                -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to
+                -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to `
+                -virtual $virtual -downloadable $downloadable
 
             $newProduct | Should -not -BeNullOrEmpty
             $newProduct | Should -HaveCount 1
@@ -72,6 +75,8 @@ Describe "New-WooCommerceProduct" {
             $newProduct.sale_price | Should -BeExactly $sale_price
             $newProduct.date_on_sale_from | Should -BeExactly $date_on_sale_from
             $newProduct.date_on_sale_to | Should -BeExactly $date_on_sale_to
+            $newProduct.virtual | Should -BeExactly $virtual
+            $newProduct.downloadable | Should -BeExactly $downloadable
         }
     }
 }

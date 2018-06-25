@@ -219,16 +219,22 @@ function Get-WooCommerceOrder
 	.PARAMETER date_on_sale_to
 		A description of the date_on_sale_to parameter.
 	
+	.PARAMETER virtual
+		A description of the virtual parameter.
+	
+	.PARAMETER downloadable
+		A description of the downloadable parameter.
+	
 	.EXAMPLE
 		PS C:\> New-WooCommerceProduct -regular_price $value1 -name 'Value2' -description 'Value3' -short_description 'Value4'
 	
 	.NOTES
 		Additional information about the function.
 #>
-Function New-WooCommerceProduct
+function New-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	Param
+	param
 	(
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
@@ -262,7 +268,13 @@ Function New-WooCommerceProduct
 		[ValidateNotNullOrEmpty()]
 		[datetime]$date_on_sale_from,
 		[ValidateNotNullOrEmpty()]
-		[datetime]$date_on_sale_to
+		[datetime]$date_on_sale_to,
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$virtual = 'false',
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$downloadable = 'false'
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
