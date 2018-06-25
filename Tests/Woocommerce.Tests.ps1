@@ -15,12 +15,25 @@ Set-WooCommerceCredential -url $script:url -apiKey $script:consumerKey -apiSecre
 
 Describe "Get-WooCommerceProduct"  {
     
-    Context "Strict mode" { 
+    Context "All Products" { 
 
         Set-StrictMode -Version latest
 
         It "Should list all Products in WooCommerce" {
             Get-WooCommerceProduct -all | Should -Not -BeNullOrEmpty  
+        }
+    }
+
+    Context "One Product" {
+        Set-StrictMode -Version latest
+
+        It "Should list a specific Product in WooCommerce" {
+            $orderID = Get-WooCommerceProduct -all | Select-Object -First 1 | Select-Object -ExpandProperty ID
+
+            #Maximim one item should be inside
+            $orderID | Should -HaveCount 1
+
+            Get-WooCommerceProduct -id $orderID | Should -HaveCount 1
         }
     }
 }
