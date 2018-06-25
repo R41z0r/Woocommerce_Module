@@ -9,6 +9,8 @@ $script:consumerKey = "ck_4152c4f7449ceff479498be90607bb905761d9b1"
 $script:cosumerSecret = "cs_e8e8bf615e8cc3fcf56415ace8d8c04a04551ab6"
 $script:url = "https://cloudra.de"
 
+[System.Array]$script:wooCommerceProductsArray = @()
+
 Import-Module -Force $PSScriptRoot\..\..\Woocommerce
 
 Set-WooCommerceCredential -url $script:url -apiKey $script:consumerKey -apiSecret $script:cosumerSecret
@@ -18,7 +20,9 @@ Describe "New-WooCommerceProduct" {
         Set-StrictMode -Version latest
 
         It "Should create a new simple product" {
-            New-WooCommerceProduct -name "TestPester" | Should -Not -BeNullOrEmpty
+            $newProduct = New-WooCommerceProduct -name "TestPester"
+            $newProduct | Should -Not -BeNullOrEmpty
+            $script:wooCommerceProductsArray += $newProduct.ID
         }
 
         It "Should create a new simple product with price" {
@@ -26,6 +30,7 @@ Describe "New-WooCommerceProduct" {
             $newProduct = New-WooCommerceProduct -name "TestPester" -regular_price $price
             $newProduct | Should -not -BeNullOrEmpty
             $newProduct | Should -HaveCount 1
+            $script:wooCommerceProductsArray += $newProduct.ID
             $newProduct.regular_price | Should -BeExactly $price
         }
 
@@ -49,6 +54,7 @@ Describe "New-WooCommerceProduct" {
 
             $newProduct | Should -not -BeNullOrEmpty
             $newProduct | Should -HaveCount 1
+            $script:wooCommerceProductsArray += $newProduct.ID
             $newProduct.regular_price | Should -BeExactly $price
             $newProduct.description | Should -BeExactly $description
             $newProduct.short_description | Should -BeExactly $shortDescription
@@ -82,6 +88,32 @@ Describe "Get-WooCommerceProduct"  {
             $orderID | Should -HaveCount 1
 
             Get-WooCommerceProduct -id $orderID | Should -HaveCount 1
+        }
+    }
+}
+
+Describe "Remove-WooCommerceProduct" {
+    Context "Delete one" {
+        Set-StrictMode -Version latest
+
+        It "Should throw an error" {
+            Remove-WooCommerceProduct -id "0" | Should -Throw
+        }
+
+        It "Should move one Product to bin" {
+            $script:wooCommerceProductsArray | Should -Not -BeNullOrEmpty
+            $removedProduct = Remove-WooCommerceProduct -id $script:wooCommerceProductsArray[0]
+            $removedProduct | Should -Not -BeNullOrEmpty
+            $removedProduct | Should -HaveCount 1
+            $removedProduct.ID | Should -BeExactly $script:wooCommerceProductsArray[0]
+        }
+                
+        It "Should remove one Product completely" {
+            $script:wooCommerceProductsArray | Should -Not -BeNullOrEmpty
+            $removedProduct = Remove-WooCommerceProduct -id $script:wooCommerceProductsArray[1] -permanently
+            $removedProduct | Should -Not -BeNullOrEmpty
+            $removedProduct | Should -HaveCount 1
+            $removedProduct.ID | Should -BeExactly $script:wooCommerceProductsArray[1]
         }
     }
 }

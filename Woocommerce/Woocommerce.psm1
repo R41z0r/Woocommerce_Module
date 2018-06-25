@@ -221,19 +221,19 @@ Function New-WooCommerceProduct
 		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description,
+		[ValidateNotNullOrEmpty()]
 		[ValidateSet('external', 'grouped', 'simple', 'variable')]
-		[ValidateNotNullOrEmpty()]
 		[System.String]$type = 'simple',
-		[ValidateSet('draft', 'pending', 'private', 'publish')]
 		[ValidateNotNullOrEmpty()]
+		[ValidateSet('draft', 'pending', 'private', 'publish')]
 		[System.String]$status = 'publish',
 		[ValidateNotNullOrEmpty()]
 		[System.String]$slug,
+		[ValidateNotNullOrEmpty()]
 		[ValidateSet('false', 'true')]
-		[ValidateNotNullOrEmpty()]
 		[System.String]$featured = 'false',
-		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
 		[ValidateNotNullOrEmpty()]
+		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
 		[System.String]$catalog_visibility = 'visible'
 	)
 	
@@ -256,7 +256,7 @@ Function New-WooCommerceProduct
 				If ($var.Value -match "\d|\w")
 				{
 					$query += @{
-						$var.Name  = "$($var.Value)"
+						$var.Name   = "$($var.Value)"
 					}
 				}
 			}
@@ -357,7 +357,7 @@ function Remove-WooCommerceProduct
 			$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
 			if ($result)
 			{
-				Write-Output -InputObject "Successfully deleted ID: $id - Name: $($result.name)"
+				Return $result
 			}
 		}
 	}
