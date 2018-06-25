@@ -5,30 +5,27 @@ if(-not $PSScriptRoot)
 }
 
 $PSVersion = $PSVersionTable.PSVersion.Major
+$script:consumerKey = "ck_4152c4f7449ceff479498be90607bb905761d9b1"
+$script:cosumerSecret = "cs_e8e8bf615e8cc3fcf56415ace8d8c04a04551ab6"
+$script:url = "https://cloudra.de"
+
 Import-Module -Force $PSScriptRoot\..\Woocommerce
 
+Set-WooCommerceCredential -url $script:url -apiKey $script:consumerKey -apiSecret $script:cosumerSecret
 
-#This is more appropriate for context, but we include PSVersion in the It blocks to differentiate in AppVeyor
-Describe "Invoke-DiskPartScript"  {
+Describe "Get-WooCommerceProduct"  {
     
     Context "Strict mode" { 
 
         Set-StrictMode -Version latest
 
-        It "Should list disks on a local system PS$PSVersion" {
-
-            $OutString = Invoke-DiskPartScript -ComputerName $env:COMPUTERNAME -DiskPartText "list disk" -Raw
-            $OutArray = ($OutString -split "`n") | Where-Object { $_ -match "[A-Za-z0-9]"}
-            
-            #Hopefully you have at least one disk.
-            $OutArray.Count | Should BeGreaterThan 4
-
-            #Is this different on other versions of Windows?  Is there a better regex?
-            $OutString | Should Match "\s*Disk ###\s*Status\s*Size\s*Free.*"
+        It "Should list all Products in WooCommerce" {
+            Get-WooCommerceProduct -all | Should not -BeNullOrEmpty  
         }
     }
 }
 
+<#
 Describe "Get-DiskPartDisk" {
     
     Context "Strict mode" { 
@@ -67,3 +64,4 @@ Describe "Get-DiskPartVolume"  {
         }
     }
 }
+#>
