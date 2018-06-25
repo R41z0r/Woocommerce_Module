@@ -20,7 +20,7 @@ Describe "Get-WooCommerceProduct"  {
         Set-StrictMode -Version latest
 
         It "Should list all Products in WooCommerce" {
-            Get-WooCommerceProduct -all | Should not -BeNullOrEmpty  
+            Get-WooCommerceProduct -all | Should -Not -BeNullOrEmpty  
         }
     }
 }
