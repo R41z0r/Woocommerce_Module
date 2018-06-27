@@ -3,6 +3,6 @@ node {
 		checkout scm
 	}
 	stage('Build') {
-		powershell -f WORKSPACE\Tests
+		powershell(returnStatus: true, script: 'env.WORKSPACE\Tests')
 	}
 }
