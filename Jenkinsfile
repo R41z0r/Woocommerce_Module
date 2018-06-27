@@ -1,3 +1,1 @@
-node {
-    powershell 'Write-Output "Hello, World!"'
-}
+powershell 'write-host "test"'
