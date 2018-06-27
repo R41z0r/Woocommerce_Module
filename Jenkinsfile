@@ -1,5 +1,5 @@
 def PowerShell(psCmd) {
-    bat "powershell.exe -NonInteractive -ExecutionPolicy Bypass -File '$psCmd'"
+    bat 'powershell.exe -NonInteractive -ExecutionPolicy Bypass -File "$psCmd"'
 }
 
 node {
