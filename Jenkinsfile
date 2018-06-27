@@ -4,6 +4,6 @@ node {
 		echo "Running ${env.WORKSPACE} on ${env.JENKINS_URL}"
 	}
 	stage('Build') {
-		powershell(returnStatus: true, script: '${env.WORKSPACE}\\Tests')
+		powershell(returnStatus: true, script: '${env.WORKSPACE}\\Tests\\appveyor.pester.ps1')
 	}
 }
