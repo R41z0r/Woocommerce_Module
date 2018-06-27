@@ -8,6 +8,6 @@ node {
 		echo "Running ${env.WORKSPACE} on ${env.JENKINS_URL}"
 	}
 	stage('Build') {
-		PowerShell("${env.WORKSPACE}\\..\\Tests\\appveyor.pester.ps1")
+		PowerShell("${env.WORKSPACE}\\Tests\\appveyor.pester.ps1")
 	}
 }
