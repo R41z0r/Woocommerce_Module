@@ -1,3 +1,7 @@
 node {
-    powershell 'Write-Output "Hello, World!"'
+		stage 'Checkout'
+				checkout scm
+
+		stage 'Build'
+				powershell -f WORKSPACE\Tests
 }
