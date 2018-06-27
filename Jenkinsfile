@@ -6,4 +6,7 @@ node {
 	stage('Pester') {
 		powershell "& \"${env.WORKSPACE}\\Tests\\appveyor.pester.ps1\""
 	}
+	stage("PublishTestReport"){
+		nunit testResultsPattern: 'TestResultPS5.xml'
+	}
 }
