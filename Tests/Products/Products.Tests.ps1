@@ -13,7 +13,7 @@ Describe "Get-WooCommerceProduct"  {
         Set-StrictMode -Version latest
 
         It "Should list all files in systemdrive" {
-            (Get-ChildItem -Path $env:systemdrive).Count | Should -BeGreatherThan 0
+            (Get-ChildItem -Path $env:systemdrive).Count | Should -BeGreaterOrEqual 0
         }
     }
 }
