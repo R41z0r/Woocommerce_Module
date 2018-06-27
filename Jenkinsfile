@@ -1,3 +1,3 @@
 node {
-	powershell.exe 'Write-host "Test with Jenkins"'
+    powershell 'Write-Output "Hello, World!"'
 }
