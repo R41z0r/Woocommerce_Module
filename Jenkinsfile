@@ -8,4 +8,7 @@ node {
 	}
 	step([$class: 'NUnitPublisher', testResultsPattern: 'TestResultsPS5.xml', debug: false, 
                  keepJUnitReports: true, skipJUnitArchiver:false, failIfNoResults: true])
+	stage("PublishTestReport"){
+		nunit testResultsPattern: 'TestResultsPS5.xml'
+	}
 }
