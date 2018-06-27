@@ -1,7 +1,8 @@
 node {
-		stage 'Checkout'
-				checkout scm
-
-		stage 'Build'
-				powershell -f WORKSPACE\Tests
+	stage('Checkout') {
+		checkout scm
+	}
+	stage('Build') {
+		powershell -f WORKSPACE\Tests
+	}
 }
