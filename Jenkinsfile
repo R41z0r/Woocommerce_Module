@@ -1,1 +1,0 @@
-powershell 'write-host "test"'
