@@ -1,5 +1,5 @@
 Import-Module PSScriptAnalyzer
-$Results = Invoke-ScriptAnalyzer -Path "$PSScriptRoot\.." -Recurse -Severity Warning,Error -ErrorAction SilentlyContinue
+$Results = Invoke-ScriptAnalyzer -Path "$PSScriptRoot\..\Woocommerce" -Recurse -Severity Warning,Error -ErrorAction SilentlyContinue
 If ($Results) {
 $ResultString = $Results | Out-String
 Write-Warning $ResultString
