@@ -29,6 +29,9 @@ $filterParameter = @(
 $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
 
+#region Helper Functions
+
+#region Credentials
 <#
 	.SYNOPSIS
 		Check for the WooCommerce credentials and uri
@@ -50,7 +53,7 @@ function Get-WooCommerceCredential
 	}
 	else
 	{
-		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category ReadError
+		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category AuthenticationError
 		return $false
 	}
 }
@@ -114,7 +117,11 @@ function Set-WooCommerceCredential
 		}
 	}
 }
+#endregion Credentials
 
+#endregion Helper Functions
+
+#region Order
 <#
 	.SYNOPSIS
 		Return a list of WooCommerce orders
@@ -159,7 +166,9 @@ function Get-WooCommerceOrder
 		}
 	}
 }
+#endregion Order
 
+#region Product
 <#
 	.SYNOPSIS
 		Creates a new WooCommerce product
@@ -167,22 +176,19 @@ function Get-WooCommerceOrder
 	.DESCRIPTION
 		Creates a new WooCommerce product with the specified parameters
 	
-	.PARAMETER regular_price
-		Set the regular_price of your product
-	
 	.PARAMETER name
 		Provide a name for your product
+	
+	.PARAMETER type
+		Defines the type of the product, avaible types are:
+		simple, grouped, external and variable.
+		Default is simple
 	
 	.PARAMETER description
 		Provide a description of your product
 	
 	.PARAMETER short_description
 		Provide a brief description of the product
-	
-	.PARAMETER type
-		Defines the type of the product, avaible types are:
-		simple, grouped, external and variable.
-		Default is simple
 	
 	.PARAMETER status
 		Defines the status of the product:
@@ -198,43 +204,77 @@ function Get-WooCommerceOrder
 		Defines the visibility to the catalog
 		visible, catalog, search, hidden
 	
+	.PARAMETER sku
+		Unique identifier of a product
+	
+	.PARAMETER regular_price
+		Set the regular_price of your product
+	
+	.PARAMETER sale_price
+		Price for products on sale
+	
+	.PARAMETER date_on_sale_from
+		A description of the date_on_sale_from parameter.
+	
+	.PARAMETER date_on_sale_to
+		A description of the date_on_sale_to parameter.
+	
+	.PARAMETER virtual
+		A description of the virtual parameter.
+	
+	.PARAMETER downloadable
+		A description of the downloadable parameter.
+	
 	.EXAMPLE
 		PS C:\> New-WooCommerceProduct -regular_price $value1 -name 'Value2' -description 'Value3' -short_description 'Value4'
 	
 	.NOTES
 		Additional information about the function.
 #>
-Function New-WooCommerceProduct
+function New-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	Param
+	param
 	(
-		[Parameter(Mandatory = $false)]
-		[ValidateNotNullOrEmpty()]
-		[double]$regular_price,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
+		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$type = 'simple',
 		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$description,
 		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description,
-		[ValidateNotNullOrEmpty()]
-		[ValidateSet('external', 'grouped', 'simple', 'variable')]
-		[System.String]$type = 'simple',
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('draft', 'pending', 'private', 'publish')]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$status = 'publish',
 		[ValidateNotNullOrEmpty()]
 		[System.String]$slug,
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('false', 'true')]
-		[System.String]$featured = 'false',
 		[ValidateNotNullOrEmpty()]
+		[System.String]$featured = 'false',
 		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
-		[System.String]$catalog_visibility = 'visible'
+		[ValidateNotNullOrEmpty()]
+		[System.String]$catalog_visibility = 'visible',
+		[ValidateNotNullOrEmpty()]
+		[System.String]$sku,
+		[ValidateNotNullOrEmpty()]
+		[double]$regular_price,
+		[ValidateNotNullOrEmpty()]
+		[double]$sale_price,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_from,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_to,
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$virtual = 'false',
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$downloadable = 'false'
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
@@ -255,8 +295,13 @@ Function New-WooCommerceProduct
 				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
 				If ($var.Value -match "\d|\w")
 				{
+					$value = $var.Value
+					If ($var.Name -in @("date_on_sale_from", "date_on_sale_to"))
+					{
+						$value = Get-Date $value -Format s
+					}
 					$query += @{
-						$var.Name   = "$($var.Value)"
+						$var.Name    = "$value"
 					}
 				}
 			}
@@ -444,6 +489,7 @@ function Set-WooCommerceProduct
 		}
 	}
 }
+#endregion Product
 
 Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,

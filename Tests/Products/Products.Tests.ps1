@@ -1,7 +1,35 @@
+function Get-ScriptDirectory
+{
+<#
+	.SYNOPSIS
+		Get-ScriptDirectory returns the proper location of the script.
+
+	.OUTPUTS
+		System.String
+	
+	.NOTES
+		Returns the correct path within a packaged executable.
+#>
+	[OutputType([string])]
+	param ()
+	if ($null -ne $hostinvocation)
+	{
+		Split-Path $hostinvocation.MyCommand.path
+	}
+	else
+	{
+		Split-Path $script:MyInvocation.MyCommand.Path
+	}
+}
+
+#Sample variable that provides the location of the script
+
+
 #handle PS2
 if(-not $PSScriptRoot)
 {
-    $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
+    [string]$PSScriptRoot = Get-ScriptDirectory
+    #$PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
 $PSVersion = $PSVersionTable.PSVersion.Major
@@ -39,30 +67,44 @@ Describe "New-WooCommerceProduct" {
                 "true" = $true
                 "false" = $false
             }
-            $price = 0.12
+            $name = "TestPesterAllAttributes"
+            $type = "simple"
             $description = "ProductTest"
             $shortDescription = "ShortProductTest"
-            $type = "simple"
             $status = "draft"
-            $featured = "false"
+            $slug = "test"
+            $featured = "$([System.String]([boolean](Get-Random 0,1)))"
             $catalog_visibility = "hidden"
-            $name = "TestPesterAllAttributes"
+            $price = 0.12
+            $sale_price = 0.05
+            $date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(1) -Format s)"
+            $date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(3) -Format s)"
+            $virtual = "$([System.String]([boolean](Get-Random 0,1)))"
+            $downloadable = "$([System.String]([boolean](Get-Random 0,1)))"
 
-            $newProduct = New-WooCommerceProduct -name $name -regular_price $price `
-                -description $description -short_description $shortDescription -type $type -status $status `
-                -featured $featured -catalog_visibility $catalog_visibility
+            $newProduct = New-WooCommerceProduct -name $name -type $type `
+                -description $description -short_description $shortDescription -status $status `
+                -slug $slug -featured $featured -catalog_visibility $catalog_visibility -regular_price $price `
+                -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to `
+                -virtual $virtual -downloadable $downloadable
 
             $newProduct | Should -not -BeNullOrEmpty
             $newProduct | Should -HaveCount 1
             $script:wooCommerceProductsArray += $newProduct.ID
-            $newProduct.regular_price | Should -BeExactly $price
+            $newProduct.name | Should -BeExactly $name
+            $newProduct.type | Should -BeExactly $type
             $newProduct.description | Should -BeExactly $description
             $newProduct.short_description | Should -BeExactly $shortDescription
             $newProduct.status | Should -BeExactly $status
-            $newProduct.type | Should -BeExactly $type
+            $newProduct.slug | Should -BeExactly $slug
             $newProduct.featured | Should -BeExactly $hashFalseTrue["$featured"]
             $newProduct.catalog_visibility | Should -BeExactly $catalog_visibility
-            $newProduct.name | Should -BeExactly $name
+            $newProduct.regular_price | Should -BeExactly $price
+            $newProduct.sale_price | Should -BeExactly $sale_price
+            $newProduct.date_on_sale_from | Should -BeExactly $date_on_sale_from
+            $newProduct.date_on_sale_to | Should -BeExactly $date_on_sale_to
+            $newProduct.virtual | Should -BeExactly $virtual
+            $newProduct.downloadable | Should -BeExactly $downloadable
         }
     }
 }
