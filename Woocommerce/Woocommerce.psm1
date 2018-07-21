@@ -74,6 +74,9 @@ function Get-WooCommerceCredential
 	.PARAMETER apiSecret
 		The api secret provided by WooCommerce
 	
+	.PARAMETER noMsg
+		Hides the status msg of a seccessful connect
+	
 	.EXAMPLE
 		PS C:\> Set-WooCommerceCredential -url 'Value1' -apiKey 'Value2' -apiSecret 'Value3'
 	
@@ -96,24 +99,30 @@ function Set-WooCommerceCredential
 		[Parameter(Mandatory = $true,
 				   Position = 3)]
 		[ValidateNotNullOrEmpty()]
-		[System.String]$apiSecret
+		[System.String]$apiSecret,
+		[Parameter(Position = 4)]
+		[switch]$noMsg
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
 		Try
 		{
-			Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			Invoke-RestMethod -Method GET -Uri "$url/$script:woocommerceOrder" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
-				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+				Authorization = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
+			if (-not ($noMsg))
+			{
+				Write-Output -InputObject "Credentials set correctly"
+			}
 		}
 		catch
 		{
-			Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+			throw "Wrong Credentials or URL"
 		}
 	}
 }
@@ -301,7 +310,7 @@ function New-WooCommerceProduct
 						$value = Get-Date $value -Format s
 					}
 					$query += @{
-						$var.Name    = "$value"
+						$var.Name = "$value"
 					}
 				}
 			}

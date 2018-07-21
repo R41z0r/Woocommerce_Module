@@ -24,7 +24,6 @@ function Get-ScriptDirectory
 
 #Sample variable that provides the location of the script
 
-
 #handle PS2
 if(-not $PSScriptRoot)
 {
