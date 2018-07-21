@@ -154,5 +154,10 @@ Describe "Remove-WooCommerceProduct" {
             $removedProduct | Should -HaveCount 1
             $removedProduct.ID | Should -BeExactly $script:wooCommerceProductsArray[1]
         }
+		
+		It "Should remove all Products completely" {
+			Get-WooCommerceProduct | Select-Object -Property ID | Remove-WooCommerceProduct -permanently | Out-Null
+			(Get-WooCommerceProduct | Measure-Object).Count | Should -BeExactly 0
+		}
     }
 }

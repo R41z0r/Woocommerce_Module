@@ -393,25 +393,28 @@ function Remove-WooCommerceProduct
 	param
 	(
 		[Parameter(Mandatory = $true,
+				   ValueFromPipelineByPropertyName = $true,
 				   Position = 1)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[switch]$permanently = $false
 	)
-	
-	if ($pscmdlet.ShouldProcess("Remove product $id"))
+	process
 	{
-		if (Get-WooCommerceCredential)
+		if ($pscmdlet.ShouldProcess("Remove product $id"))
 		{
-			$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
-			if ($permanently)
+			if (Get-WooCommerceCredential)
 			{
-				$url += "?force=true"
-			}
-			$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
-			if ($result)
-			{
-				Return $result
+				$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
+				if ($permanently)
+				{
+					$url += "?force=true"
+				}
+				$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+				if ($result)
+				{
+					Return $result
+				}
 			}
 		}
 	}
