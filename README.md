@@ -7,9 +7,10 @@ At a minimum, make sure you have installed the following:
 - Windows Powershell 3+
 
 WooCommerce Requirements [ApiReference]:
+
 | API Version | WC Version | WP Version |
 | ------ | ------ | ------ |
-| 3 | 3.0.x or later | 4.4 or later |
+| 3 | 3.0.x or later | 4.4 or later 
 
 
 # Installation & Execution
