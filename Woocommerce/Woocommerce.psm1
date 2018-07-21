@@ -53,7 +53,7 @@ function Get-WooCommerceCredential
 	}
 	else
 	{
-		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category ReadError
+		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category AuthenticationError
 		return $false
 	}
 }

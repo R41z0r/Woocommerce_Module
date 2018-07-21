@@ -16,67 +16,67 @@
 @{
 	
 	# Script module or binary module file associated with this manifest
-	RootModule		      = 'Woocommerce.psm1'
+	RootModule			   = 'Woocommerce.psm1'
 	
 	# Version number of this module.
-	ModuleVersion			  = '1.1.1.1'
+	ModuleVersion		   = '1.1.1.5'
 	
 	# ID used to uniquely identify this module
-	GUID					  = '5455e4ea-11e5-48eb-bd6a-e2855ae12008'
+	GUID				   = '5455e4ea-11e5-48eb-bd6a-e2855ae12008'
 	
 	# Author of this module
-	Author				      = 'R41Z0R'
+	Author				   = 'R41Z0R'
 	
 	# Company or vendor of this module
-	CompanyName			      = ''
+	CompanyName		       = ''
 	
 	# Copyright statement for this module
-	Copyright				  = '(c) 2017. All rights reserved.'
+	Copyright			   = '(c) 2017. All rights reserved.'
 	
 	# Description of the functionality provided by this module
-	Description			      = 'Module description'
+	Description		       = 'Manage your WooCommerce Shop with REST-API in PowerShell'
 	
 	# Minimum version of the Windows PowerShell engine required by this module
-	PowerShellVersion		  = '3.0'
+	PowerShellVersion	   = '3.0'
 	
 	# Name of the Windows PowerShell host required by this module
-	PowerShellHostName	      = ''
+	PowerShellHostName	   = ''
 	
 	# Minimum version of the Windows PowerShell host required by this module
-	PowerShellHostVersion	  = ''
+	PowerShellHostVersion  = ''
 	
 	# Minimum version of the .NET Framework required by this module
-	DotNetFrameworkVersion    = '2.0'
+	DotNetFrameworkVersion = '2.0'
 	
 	# Minimum version of the common language runtime (CLR) required by this module
-	CLRVersion			      = '2.0.50727'
+	CLRVersion			   = '2.0.50727'
 	
 	# Processor architecture (None, X86, Amd64, IA64) required by this module
-	ProcessorArchitecture	  = 'None'
+	ProcessorArchitecture  = 'None'
 	
 	# Modules that must be imported into the global environment prior to importing
 	# this module
-	RequiredModules		      = @()
+	RequiredModules	       = @()
 	
 	# Assemblies that must be loaded prior to importing this module
-	RequiredAssemblies	      = @()
+	RequiredAssemblies	   = @()
 	
 	# Script files (.ps1) that are run in the caller's environment prior to
 	# importing this module
-	ScriptsToProcess		  = @()
+	ScriptsToProcess	   = @()
 	
 	# Type files (.ps1xml) to be loaded when importing this module
-	TypesToProcess		      = @()
+	TypesToProcess		   = @()
 	
 	# Format files (.ps1xml) to be loaded when importing this module
-	FormatsToProcess		  = @()
+	FormatsToProcess	   = @()
 	
 	# Modules to import as nested modules of the module specified in
 	# ModuleToProcess
-	NestedModules			  = @()
+	NestedModules		   = @()
 	
 	# Functions to export from this module
-	FunctionsToExport		   = @(
+	FunctionsToExport	   = @(
 		'Get-WooCommerceOrder',
 		'Get-WooCommerceProduct',
 		'New-WooCommerceProduct',
@@ -86,7 +86,7 @@
 	) #For performanace, list functions explicity
 	
 	# Cmdlets to export from this module
-	#CmdletsToExport		      = @()
+	CmdletsToExport	       = @(	)
 	
 	# Variables to export from this module
 	#VariablesToExport		  = @()
@@ -95,16 +95,16 @@
 	#AliasesToExport		      = @() #For performanace, list alias explicity
 	
 	# List of all modules packaged with this module
-	ModuleList			      = @()
+	ModuleList			   = @()
 	
 	# List of all files packaged with this module
-	FileList				  = @()
+	FileList			   = @()
 	
 	# Private data to pass to the module specified in ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
-	PrivateData			      = @{
+	PrivateData		       = @{
 		
 		#Support for PowerShellGet galleries.
-		PSData    = @{
+		PSData = @{
 			
 			# Tags applied to this module. These help with module discovery in online galleries.
 			# Tags = @()
@@ -113,7 +113,7 @@
 			# LicenseUri = ''
 			
 			# A URL to the main website for this project.
-			# ProjectUri = ''
+			ProjectUri = 'https://github.com/R41z0r/Woocommerce_Module'
 			
 			# A URL to an icon representing this module.
 			# IconUri = ''
