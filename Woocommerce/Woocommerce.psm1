@@ -28,6 +28,11 @@ $filterParameter = @(
 
 $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
+[boolean]$script:pUseDefaultCredentials = $false
+$script:pProxy = ""
+$script:pProxyCredentials = ""
+[boolean]$script:pProxyUseDefaultCredentials = $false
+[boolean]$script:usePersistent = $false
 
 #region Helper Functions
 
@@ -77,6 +82,21 @@ function Get-WooCommerceCredential
 	.PARAMETER noMsg
 		Hides the status msg of a seccessful connect
 	
+	.PARAMETER UseDefaultCredentials
+		A description of the UseDefaultCredentials parameter.
+	
+	.PARAMETER Proxy
+		A description of the Proxy parameter.
+	
+	.PARAMETER ProxyUseDefaultCredentials
+		A description of the ProxyUseDefaultCredentials parameter.
+	
+	.PARAMETER ProxyCredential
+		A description of the ProxyCredential parameter.
+	
+	.PARAMETER persistent
+		A description of the persistent parameter.
+	
 	.EXAMPLE
 		PS C:\> Set-WooCommerceCredential -url 'Value1' -apiKey 'Value2' -apiSecret 'Value3'
 	
@@ -101,20 +121,70 @@ function Set-WooCommerceCredential
 		[ValidateNotNullOrEmpty()]
 		[System.String]$apiSecret,
 		[Parameter(Position = 4)]
-		[switch]$noMsg
+		[switch]$noMsg,
+		[Parameter(Position = 5)]
+		[switch]$UseDefaultCredentials,
+		[Parameter(Position = 6)]
+		[System.Uri]$Proxy,
+		[Parameter(Position = 7)]
+		[switch]$ProxyUseDefaultCredentials,
+		[Parameter(Position = 8)]
+		[System.Management.Automation.PSCredential]$ProxyCredential,
+		[Parameter(Position = 9)]
+		[switch]$persistent
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
 		Try
 		{
-			Invoke-RestMethod -Method GET -Uri "$url/$script:woocommerceOrder" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			$paramInvokeRestMethod = @{
+				Method = 'GET'
+				Uri    = "$url/$script:woocommerceOrder"
+				Headers = @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) }
+				ErrorAction = 'Stop'
+			}
+			if ($UseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($ProxyCredential)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+			}
+			if ($ProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+			}
+			if ($Proxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $Proxy }
+			}
+			
+			Invoke-RestMethod @paramInvokeRestMethod | Out-Null
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
 				Authorization = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
+			if ($persistent -and ($Proxy -or $ProxyUseDefaultCredentials -or $UseDefaultCredentials -or $ProxyCredential))
+			{
+				$script:pProxy = $Proxy
+				$script:pUseDefaultCredentials = $UseDefaultCredentials
+				$script:pProxyUseDefaultCredentials = $ProxyUseDefaultCredentials
+				$script:pProxyCredentials = $ProxyCredential
+				$script:usePersistent = $true
+				Write-Output -InputObject "You set your Proxy-Settings persistent for all commands"
+			}
+			else
+			{
+				$script:pUseDefaultCredentials = $false
+				$script:pProxy = ""
+				$script:pProxyCredentials = ""
+				$script:pProxyUseDefaultCredentials = $false
+				$script:usePersistent = $false
+			}
 			if (-not ($noMsg))
 			{
 				Write-Output -InputObject "Credentials set correctly"
@@ -122,7 +192,7 @@ function Set-WooCommerceCredential
 		}
 		catch
 		{
-			throw "Wrong Credentials or URL"
+			throw "$($_.Exception)"
 		}
 	}
 }
@@ -158,7 +228,15 @@ function Get-WooCommerceOrder
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[Parameter(Position = 2)]
-		[switch]$all
+		[switch]$all,
+		[Parameter(Position = 3)]
+		[switch]$UseDefaultCredentials,
+		[Parameter(Position = 4)]
+		[System.Uri]$Proxy,
+		[Parameter(Position = 5)]
+		[switch]$ProxyUseDefaultCredentials,
+		[Parameter(Position = 6)]
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	
 	if (Get-WooCommerceCredential)
@@ -168,7 +246,51 @@ function Get-WooCommerceOrder
 		{
 			$url += "/$id"
 		}
-		$result = Invoke-RestMethod -Method GET -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+		$paramInvokeRestMethod = @{
+			Method = 'GET'
+			Uri    = "$url"
+			Headers = $script:woocommerceBase64AuthInfo
+		}
+		if ($script:usePersistent)
+		{
+			if ($script:pUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($script:pProxyCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+			}
+			if ($script:pProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+			}
+			if ($script:pProxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+			}
+		}
+		else
+		{
+			if ($UseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($ProxyCredential)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+			}
+			if ($ProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+			}
+			if ($Proxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $Proxy }
+			}
+		}
+		
+		$result = Invoke-RestMethod @paramInvokeRestMethod
 		if ($result)
 		{
 			return $result
@@ -283,7 +405,11 @@ function New-WooCommerceProduct
 		[System.String]$virtual = 'false',
 		[ValidateSet('false', 'true')]
 		[ValidateNotNullOrEmpty()]
-		[System.String]$downloadable = 'false'
+		[System.String]$downloadable = 'false',
+		[switch]$UseDefaultCredentials,
+		[System.Uri]$Proxy,
+		[switch]$ProxyUseDefaultCredentials,
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
@@ -315,7 +441,55 @@ function New-WooCommerceProduct
 				}
 			}
 			$json = $query | ConvertTo-Json
-			$result = Invoke-RestMethod -Method POST -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
+			
+			$paramInvokeRestMethod = @{
+				Method = 'POST'
+				Uri    = "$url"
+				Headers = $script:woocommerceBase64AuthInfo
+				Body   = $json
+				ContentType = 'application/json'
+			}
+			
+			if ($script:usePersistent)
+			{
+				if ($script:pUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+				}
+				if ($script:pProxyCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+				}
+				if ($script:pProxyUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+				}
+				if ($script:pProxy)
+				{
+					$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+				}
+			}
+			else
+			{
+				if ($UseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+				}
+				if ($ProxyCredential)
+				{
+					$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+				}
+				if ($ProxyUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+				}
+				if ($Proxy)
+				{
+					$paramInvokeRestMethod += @{ Proxy = $Proxy }
+				}
+			}
+			
+			$result = Invoke-RestMethod @paramInvokeRestMethod
 			If ($result)
 			{
 				Return $result
@@ -351,7 +525,15 @@ function Get-WooCommerceProduct
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[Parameter(Position = 2)]
-		[switch]$all
+		[switch]$all,
+		[Parameter(Position = 3)]
+		[switch]$UseDefaultCredentials,
+		[Parameter(Position = 4)]
+		[System.Uri]$Proxy,
+		[Parameter(Position = 5)]
+		[switch]$ProxyUseDefaultCredentials,
+		[Parameter(Position = 6)]
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	if (Get-WooCommerceCredential)
 	{
@@ -360,7 +542,52 @@ function Get-WooCommerceProduct
 		{
 			$url += "/$id"
 		}
-		$result = Invoke-RestMethod -Method GET -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+		$paramInvokeRestMethod = @{
+			Method = 'GET'
+			Uri    = "$url"
+			Headers = $script:woocommerceBase64AuthInfo
+		}
+		
+		if ($script:usePersistent)
+		{
+			if ($script:pUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($script:pProxyCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+			}
+			if ($script:pProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+			}
+			if ($script:pProxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+			}
+		}
+		else
+		{
+			if ($UseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($ProxyCredential)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+			}
+			if ($ProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+			}
+			if ($Proxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $Proxy }
+			}
+		}
+		
+		$result = Invoke-RestMethod @paramInvokeRestMethod
 		if ($result)
 		{
 			return $result
@@ -397,7 +624,11 @@ function Remove-WooCommerceProduct
 				   Position = 1)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
-		[switch]$permanently = $false
+		[switch]$permanently = $false,
+		[switch]$UseDefaultCredentials,
+		[System.Uri]$Proxy,
+		[switch]$ProxyUseDefaultCredentials,
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	process
 	{
@@ -410,7 +641,52 @@ function Remove-WooCommerceProduct
 				{
 					$url += "?force=true"
 				}
-				$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+				$paramInvokeRestMethod = @{
+					Method = 'DELETE'
+					Uri    = "$url"
+					Headers = $script:woocommerceBase64AuthInfo
+				}
+				
+				if ($script:usePersistent)
+				{
+					if ($script:pUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($script:pProxyCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+					}
+					if ($script:pProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+					}
+					if ($script:pProxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+					}
+				}
+				else
+				{
+					if ($UseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($ProxyCredential)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+					}
+					if ($ProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+					}
+					if ($Proxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $Proxy }
+					}
+				}
+				
+				$result = Invoke-RestMethod @paramInvokeRestMethod
 				if ($result)
 				{
 					Return $result
@@ -458,13 +734,47 @@ function Set-WooCommerceProduct
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[ValidateNotNullOrEmpty()]
-		[System.String]$regular_price,
-		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
+		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$type = 'simple',
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$description,
+		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
-		[System.String]$short_description
+		[System.String]$short_description,
+		[ValidateSet('draft', 'pending', 'private', 'publish')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$status = 'publish',
+		[ValidateNotNullOrEmpty()]
+		[System.String]$slug,
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$featured = 'false',
+		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$catalog_visibility = 'visible',
+		[ValidateNotNullOrEmpty()]
+		[System.String]$sku,
+		[ValidateNotNullOrEmpty()]
+		[double]$regular_price,
+		[ValidateNotNullOrEmpty()]
+		[double]$sale_price,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_from,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_to,
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$virtual = 'false',
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$downloadable = 'false',
+		[switch]$UseDefaultCredentials,
+		[System.Uri]$Proxy,
+		[switch]$ProxyUseDefaultCredentials,
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	
 	if ($pscmdlet.ShouldProcess("Modify product $id"))
@@ -475,20 +785,78 @@ function Set-WooCommerceProduct
 			$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
 			
 			$CommandName = $PSCmdlet.MyInvocation.InvocationName
-			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object { $_ -notin $filterParameter }
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -notin $filterParameter
+			}
 			
-			foreach ($Parameter in $ParameterList)
+			foreach ($Parameter In $ParameterList)
 			{
 				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
-				if ($var.Value -match "\d|\w")
+				If ($var.Value -match "\d|\w")
 				{
-					$query += @{ $var.Name = $var.Value }
+					$value = $var.Value
+					If ($var.Name -in @("date_on_sale_from", "date_on_sale_to"))
+					{
+						$value = Get-Date $value -Format s
+					}
+					$query += @{
+						$var.Name = "$value"
+					}
 				}
 			}
+			
 			if ($query.Count -gt 0)
 			{
 				$json = $query | ConvertTo-Json
-				$result = Invoke-RestMethod -Method PUT -Uri "$url" -Headers $script:woocommerceBase64AuthInfo -Body $json -ContentType 'application/json'
+				
+				$paramInvokeRestMethod = @{
+					Method = 'PUT'
+					Uri    = "$url"
+					Headers = $script:woocommerceBase64AuthInfo
+					Body   = $json
+					ContentType = 'application/json'
+				}
+				
+				if ($script:usePersistent)
+				{
+					if ($script:pUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($script:pProxyCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+					}
+					if ($script:pProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+					}
+					if ($script:pProxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+					}
+				}
+				else
+				{
+					if ($UseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($ProxyCredential)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+					}
+					if ($ProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+					}
+					if ($Proxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $Proxy }
+					}
+				}
+				
+				$result = Invoke-RestMethod @paramInvokeRestMethod
 				if ($result)
 				{
 					return $result
