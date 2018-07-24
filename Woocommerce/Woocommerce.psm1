@@ -29,6 +29,9 @@ $filterParameter = @(
 $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
 
+#region Helper Functions
+
+#region Credentials
 <#
 	.SYNOPSIS
 		Check for the WooCommerce credentials and uri
@@ -50,7 +53,7 @@ function Get-WooCommerceCredential
 	}
 	else
 	{
-		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category ReadError
+		Write-Error -Message "You have to run 'Set-WooCommerceCredentials' first" -Category AuthenticationError
 		return $false
 	}
 }
@@ -70,6 +73,9 @@ function Get-WooCommerceCredential
 	
 	.PARAMETER apiSecret
 		The api secret provided by WooCommerce
+	
+	.PARAMETER noMsg
+		Hides the status msg of a seccessful connect
 	
 	.EXAMPLE
 		PS C:\> Set-WooCommerceCredential -url 'Value1' -apiKey 'Value2' -apiSecret 'Value3'
@@ -93,28 +99,38 @@ function Set-WooCommerceCredential
 		[Parameter(Mandatory = $true,
 				   Position = 3)]
 		[ValidateNotNullOrEmpty()]
-		[System.String]$apiSecret
+		[System.String]$apiSecret,
+		[Parameter(Position = 4)]
+		[switch]$noMsg
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
 		Try
 		{
-			Invoke-RestMethod -Method GET -Uri "$url/wp-json/wc/v2" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			Invoke-RestMethod -Method GET -Uri "$url/$script:woocommerceOrder" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
-				Authorization    = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
+				Authorization = ("Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $script:woocommerceApiKey, $script:woocommerceApiSecret))))
 			}
 			$script:woocommerceUrl = $url
+			if (-not ($noMsg))
+			{
+				Write-Output -InputObject "Credentials set correctly"
+			}
 		}
 		catch
 		{
-			Write-Error -Message "Wrong Credentials or URL" -Category AuthenticationError -RecommendedAction "Please provide valid Credentials or the right uri"
+			throw "Wrong Credentials or URL"
 		}
 	}
 }
+#endregion Credentials
 
+#endregion Helper Functions
+
+#region Order
 <#
 	.SYNOPSIS
 		Return a list of WooCommerce orders
@@ -159,7 +175,9 @@ function Get-WooCommerceOrder
 		}
 	}
 }
+#endregion Order
 
+#region Product
 <#
 	.SYNOPSIS
 		Creates a new WooCommerce product
@@ -167,22 +185,19 @@ function Get-WooCommerceOrder
 	.DESCRIPTION
 		Creates a new WooCommerce product with the specified parameters
 	
-	.PARAMETER regular_price
-		Set the regular_price of your product
-	
 	.PARAMETER name
 		Provide a name for your product
+	
+	.PARAMETER type
+		Defines the type of the product, avaible types are:
+		simple, grouped, external and variable.
+		Default is simple
 	
 	.PARAMETER description
 		Provide a description of your product
 	
 	.PARAMETER short_description
 		Provide a brief description of the product
-	
-	.PARAMETER type
-		Defines the type of the product, avaible types are:
-		simple, grouped, external and variable.
-		Default is simple
 	
 	.PARAMETER status
 		Defines the status of the product:
@@ -198,43 +213,77 @@ function Get-WooCommerceOrder
 		Defines the visibility to the catalog
 		visible, catalog, search, hidden
 	
+	.PARAMETER sku
+		Unique identifier of a product
+	
+	.PARAMETER regular_price
+		Set the regular_price of your product
+	
+	.PARAMETER sale_price
+		Price for products on sale
+	
+	.PARAMETER date_on_sale_from
+		A description of the date_on_sale_from parameter.
+	
+	.PARAMETER date_on_sale_to
+		A description of the date_on_sale_to parameter.
+	
+	.PARAMETER virtual
+		A description of the virtual parameter.
+	
+	.PARAMETER downloadable
+		A description of the downloadable parameter.
+	
 	.EXAMPLE
 		PS C:\> New-WooCommerceProduct -regular_price $value1 -name 'Value2' -description 'Value3' -short_description 'Value4'
 	
 	.NOTES
 		Additional information about the function.
 #>
-Function New-WooCommerceProduct
+function New-WooCommerceProduct
 {
 	[CmdletBinding(SupportsShouldProcess = $true)]
-	Param
+	param
 	(
-		[Parameter(Mandatory = $false)]
-		[ValidateNotNullOrEmpty()]
-		[double]$regular_price,
 		[Parameter(Mandatory = $true)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$name,
+		[ValidateSet('external', 'grouped', 'simple', 'variable')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$type = 'simple',
 		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$description,
 		[Parameter(Mandatory = $false)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$short_description,
-		[ValidateNotNullOrEmpty()]
-		[ValidateSet('external', 'grouped', 'simple', 'variable')]
-		[System.String]$type = 'simple',
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('draft', 'pending', 'private', 'publish')]
+		[ValidateNotNullOrEmpty()]
 		[System.String]$status = 'publish',
 		[ValidateNotNullOrEmpty()]
 		[System.String]$slug,
-		[ValidateNotNullOrEmpty()]
 		[ValidateSet('false', 'true')]
-		[System.String]$featured = 'false',
 		[ValidateNotNullOrEmpty()]
+		[System.String]$featured = 'false',
 		[ValidateSet('visible', 'catalog', 'search', 'hidden')]
-		[System.String]$catalog_visibility = 'visible'
+		[ValidateNotNullOrEmpty()]
+		[System.String]$catalog_visibility = 'visible',
+		[ValidateNotNullOrEmpty()]
+		[System.String]$sku,
+		[ValidateNotNullOrEmpty()]
+		[double]$regular_price,
+		[ValidateNotNullOrEmpty()]
+		[double]$sale_price,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_from,
+		[ValidateNotNullOrEmpty()]
+		[datetime]$date_on_sale_to,
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$virtual = 'false',
+		[ValidateSet('false', 'true')]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$downloadable = 'false'
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Create a new product"))
@@ -255,8 +304,13 @@ Function New-WooCommerceProduct
 				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
 				If ($var.Value -match "\d|\w")
 				{
+					$value = $var.Value
+					If ($var.Name -in @("date_on_sale_from", "date_on_sale_to"))
+					{
+						$value = Get-Date $value -Format s
+					}
 					$query += @{
-						$var.Name   = "$($var.Value)"
+						$var.Name = "$value"
 					}
 				}
 			}
@@ -339,25 +393,28 @@ function Remove-WooCommerceProduct
 	param
 	(
 		[Parameter(Mandatory = $true,
+				   ValueFromPipelineByPropertyName = $true,
 				   Position = 1)]
 		[ValidateNotNullOrEmpty()]
 		[System.String]$id,
 		[switch]$permanently = $false
 	)
-	
-	if ($pscmdlet.ShouldProcess("Remove product $id"))
+	process
 	{
-		if (Get-WooCommerceCredential)
+		if ($pscmdlet.ShouldProcess("Remove product $id"))
 		{
-			$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
-			if ($permanently)
+			if (Get-WooCommerceCredential)
 			{
-				$url += "?force=true"
-			}
-			$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
-			if ($result)
-			{
-				Return $result
+				$url = "$script:woocommerceUrl/$script:woocommerceProducts/$id"
+				if ($permanently)
+				{
+					$url += "?force=true"
+				}
+				$result = Invoke-RestMethod -Method DELETE -Uri "$url" -Headers $script:woocommerceBase64AuthInfo
+				if ($result)
+				{
+					Return $result
+				}
 			}
 		}
 	}
@@ -444,6 +501,7 @@ function Set-WooCommerceProduct
 		}
 	}
 }
+#endregion Product
 
 Export-ModuleMember -Function Get-WooCommerceOrder,
 					Get-WooCommerceProduct,
