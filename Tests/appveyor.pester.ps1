@@ -8,8 +8,7 @@ param([switch]$Finalize)
 #Initialize some variables, move to the project root
     $PSVersion = $PSVersionTable.PSVersion.Major
     $TestFile = "TestResultsPS$PSVersion.xml"
-$ProjectRoot = $ENV:APPVEYOR_BUILD_FOLDER
-Write-Host "Root: $ENV:APPVEYOR_BUILD_FOLDER"
+	$ProjectRoot = $ENV:APPVEYOR_BUILD_FOLDER
     Set-Location $ProjectRoot
    
 
