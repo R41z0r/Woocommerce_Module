@@ -97,15 +97,15 @@ Describe "New-WooCommerceOrder" {
 			$fee_lines = (New-WooCommerceOrderLineFee -name "Gebühr" -total 10)
 			
 			$newOrder = New-WooCommerceOrder -currency $currency -customer_id $customer_id -customer_note $customer_note `
-											 -billing_first_name $billing_first_name -billing_last_name $billing_last_name -billing_address_1 $billing_address_1
-			`-billing_address_2 $billing_address_2 -billing_city $billing_city -billing_state $billing_state
-			`-billing_postcode $billing_postcode -billing_country $billing_country -billing_email $billing_email
-			`-billing_phone $billing_phone -shipping_first_name $shipping_first_name -shipping_last_name $shipping_last_name
-			`-shipping_address_1 $shipping_address_1 -shipping_address_2 $shipping_address_2 -shipping_city $shipping_city
-			`-shipping_state $shipping_state -shipping_postcode $shipping_postcode -shipping_country $shipping_country
-			`-shipping_email $shipping_email -shipping_phone $shipping_phone -payment_method $payment_method
-			`-payment_method_title $payment_method_title -transaction_id $transaction_id
-			`-fee_lines $fee_lines
+											 -billing_first_name $billing_first_name -billing_last_name $billing_last_name -billing_address_1 $billing_address_1 `
+											 -billing_address_2 $billing_address_2 -billing_city $billing_city -billing_state $billing_state `
+											 -billing_postcode $billing_postcode -billing_country $billing_country -billing_email $billing_email `
+											 -billing_phone $billing_phone -shipping_first_name $shipping_first_name -shipping_last_name $shipping_last_name `
+											 -shipping_address_1 $shipping_address_1 -shipping_address_2 $shipping_address_2 -shipping_city $shipping_city `
+											 -shipping_state $shipping_state -shipping_postcode $shipping_postcode -shipping_country $shipping_country `
+											 -shipping_email $shipping_email -shipping_phone $shipping_phone -payment_method $payment_method `
+											 -payment_method_title $payment_method_title -transaction_id $transaction_id `
+											 -fee_lines $fee_lines
 			
 			$newOrder | Should -not -BeNullOrEmpty
 			$newOrder | Should -HaveCount 1
