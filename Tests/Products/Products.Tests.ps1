@@ -28,7 +28,7 @@ function Get-ScriptDirectory
 if(-not $PSScriptRoot)
 {
     [string]$PSScriptRoot = Get-ScriptDirectory
-    #$PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
+    $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 $PSVersion = $PSVersionTable.PSVersion.Major
 
