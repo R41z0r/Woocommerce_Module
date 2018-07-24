@@ -124,8 +124,8 @@ Describe "Get-WooCommerceProduct"  {
 		It "Should list all products" {
 			$products = Get-WooCommerceProduct -all
 			$products | Should -Not -BeNullOrEmpty
-			#($products | Measure-Object).count | Should -HaveCount -BeGreaterThan $script:wooCommerceProductsArray.count
-			#$script:wooCommerceProductsArray | Should -BeIn $products.id
+			($products | Measure-Object).count | Should -BeGreaterOrEqual $script:wooCommerceProductsArray.count
+			$script:wooCommerceProductsArray | Should -BeIn $products.id
 		}
 	}
 }
@@ -135,64 +135,65 @@ Describe "Set-WooCommerceProduct"  {
 	Context "New simple Product" {
 		Set-StrictMode -Version latest
 		
-		It "Should create a new simple product" {
-			$newProduct = New-WooCommerceProduct -name "TestPester"
-			$newProduct | Should -Not -BeNullOrEmpty
-			$script:wooCommerceProductsArray += $newProduct.ID
+		It "Should change name of a simple product" {
+			$name = "NewTestName"
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -name "$name"
+			$product | Should -Not -BeNullOrEmpty
+			$product.id | Should -BeExactly $script:wooCommerceProductsArray[0]
+			$product.name | Should -BeExactly "$name"
 		}
 		
-		It "Should create a new simple product with price" {
-			$price = 10.01
-			$newProduct = New-WooCommerceProduct -name "TestPester" -regular_price $price
-			$newProduct | Should -not -BeNullOrEmpty
-			$newProduct | Should -HaveCount 1
-			$script:wooCommerceProductsArray += $newProduct.ID
-			$newProduct.regular_price | Should -BeExactly $price
+		It "Should change a simple products price" {
+			$price = 21.95
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -regular_price $price
+			$product | Should -not -BeNullOrEmpty
+			$product | Should -HaveCount 1
+			$product.id | Should -BeExactly $script:wooCommerceProductsArray[0]
+			$product.regular_price | Should -BeExactly $price
 		}
 		
-		It "Should create a new simple product with all attributes available" {
+		It "Should change a simple product with all attributes available" {
 			$hashFalseTrue = @{
 				"true"  = $true
 				"false" = $false
 			}
-			$name = "TestPesterAllAttributes"
+			$name = "TestPesterAllAttributesNewName"
 			$type = "simple"
-			$description = "ProductTest"
-			$shortDescription = "ShortProductTest"
-			$status = "draft"
-			$slug = "test"
+			$description = "New Product Description"
+			$shortDescription = "New Short Product Description"
+			$status = "pending"
+			$slug = "tes1"
 			$featured = "$([System.String]([boolean](Get-Random 0, 1)))"
-			$catalog_visibility = "hidden"
-			$price = 0.12
-			$sale_price = 0.05
-			$date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(1) -Format s)"
-			$date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(3) -Format s)"
+			$catalog_visibility = "search"
+			$price = 15.96
+			$sale_price = 15
+			$date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(2) -Format s)"
+			$date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(4) -Format s)"
 			$virtual = "$([System.String]([boolean](Get-Random 0, 1)))"
 			$downloadable = "$([System.String]([boolean](Get-Random 0, 1)))"
 			
-			$newProduct = New-WooCommerceProduct -name $name -type $type `
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -name $name -type $type `
 												 -description $description -short_description $shortDescription -status $status `
 												 -slug $slug -featured $featured -catalog_visibility $catalog_visibility -regular_price $price `
 												 -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to `
 												 -virtual $virtual -downloadable $downloadable
 			
-			$newProduct | Should -not -BeNullOrEmpty
-			$newProduct | Should -HaveCount 1
-			$script:wooCommerceProductsArray += $newProduct.ID
-			$newProduct.name | Should -BeExactly $name
-			$newProduct.type | Should -BeExactly $type
-			$newProduct.description | Should -BeExactly $description
-			$newProduct.short_description | Should -BeExactly $shortDescription
-			$newProduct.status | Should -BeExactly $status
-			$newProduct.slug | Should -BeExactly $slug
-			$newProduct.featured | Should -BeExactly $hashFalseTrue["$featured"]
-			$newProduct.catalog_visibility | Should -BeExactly $catalog_visibility
-			$newProduct.regular_price | Should -BeExactly $price
-			$newProduct.sale_price | Should -BeExactly $sale_price
-			$newProduct.date_on_sale_from | Should -BeExactly $date_on_sale_from
-			$newProduct.date_on_sale_to | Should -BeExactly $date_on_sale_to
-			$newProduct.virtual | Should -BeExactly $virtual
-			$newProduct.downloadable | Should -BeExactly $downloadable
+			$product | Should -not -BeNullOrEmpty
+			$product | Should -HaveCount 1
+			$product.name | Should -BeExactly $name
+			$product.type | Should -BeExactly $type
+			$product.description | Should -BeExactly $description
+			$product.short_description | Should -BeExactly $shortDescription
+			$product.status | Should -BeExactly $status
+			$product.slug | Should -BeExactly $slug
+			$product.featured | Should -BeExactly $hashFalseTrue["$featured"]
+			$product.catalog_visibility | Should -BeExactly $catalog_visibility
+			$product.regular_price | Should -BeExactly $price
+			$product.sale_price | Should -BeExactly $sale_price
+			$product.date_on_sale_from | Should -BeExactly $date_on_sale_from
+			$product.date_on_sale_to | Should -BeExactly $date_on_sale_to
+			$product.virtual | Should -BeExactly $virtual
+			$product.downloadable | Should -BeExactly $downloadable
 		}
 	}
 }
