@@ -77,6 +77,18 @@ function Get-WooCommerceCredential
 	.PARAMETER noMsg
 		Hides the status msg of a seccessful connect
 	
+	.PARAMETER UseDefaultCredentials
+		A description of the UseDefaultCredentials parameter.
+	
+	.PARAMETER Proxy
+		A description of the Proxy parameter.
+	
+	.PARAMETER ProxyUseDefaultCredentials
+		A description of the ProxyUseDefaultCredentials parameter.
+	
+	.PARAMETER ProxyCredential
+		A description of the ProxyCredential parameter.
+	
 	.EXAMPLE
 		PS C:\> Set-WooCommerceCredential -url 'Value1' -apiKey 'Value2' -apiSecret 'Value3'
 	
@@ -101,14 +113,45 @@ function Set-WooCommerceCredential
 		[ValidateNotNullOrEmpty()]
 		[System.String]$apiSecret,
 		[Parameter(Position = 4)]
-		[switch]$noMsg
+		[switch]$noMsg,
+		[Parameter(Position = 5)]
+		[switch]$UseDefaultCredentials,
+		[Parameter(Position = 6)]
+		[System.Uri]$Proxy,
+		[Parameter(Position = 7)]
+		[switch]$ProxyUseDefaultCredentials,
+		[Parameter(Position = 8)]
+		[System.Management.Automation.PSCredential]$ProxyCredential
 	)
 	
 	If ($PSCmdlet.ShouldProcess("Check if the provided credentials and uri is correct"))
 	{
 		Try
 		{
-			Invoke-RestMethod -Method GET -Uri "$url/$script:woocommerceOrder" -Headers @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) } -ErrorAction Stop | Out-Null
+			$paramInvokeRestMethod = @{
+				Method = 'GET'
+				Uri    = "$url/$script:woocommerceOrder"
+				Headers = @{ Authorization = "Basic {0}" -f [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $apiKey, $apiSecret))) }
+				ErrorAction = 'Stop'
+			}
+			if ($UseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($ProxyCredential)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+			}
+			if ($ProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+			}
+			if ($Proxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $Proxy }
+			}
+			
+			Invoke-RestMethod @paramInvokeRestMethod | Out-Null
 			$script:woocommerceApiSecret = $apiSecret
 			$script:woocommerceApiKey = $apiKey
 			$script:woocommerceBase64AuthInfo = @{
@@ -122,7 +165,7 @@ function Set-WooCommerceCredential
 		}
 		catch
 		{
-			throw "Wrong Credentials or URL"
+			throw "$($_.Exception)"
 		}
 	}
 }
