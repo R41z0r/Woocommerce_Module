@@ -117,16 +117,16 @@ Describe "New-WooCommerceOrder" {
 			$newOrder.currency | Should -BeExactly $currency
 			$newOrder.customer_id | Should -BeExactly $customer_id
 			$newOrder.customer_note | Should -BeExactly $customer_note
-			$newOrder.billing.billing_first_name | Should -BeExactly $billing_first_name
-			$newOrder.billing.billing_last_name | Should -BeExactly $billing_last_name
-			$newOrder.billing.billing_address_1 | Should -BeExactly $billing_address_1
-			$newOrder.billing.billing_address_2 | Should -BeExactly $billing_address_2
-			$newOrder.billing.billing_city | Should -BeExactly $billing_city
-			$newOrder.billing.billing_state | Should -BeExactly $billing_state
-			$newOrder.billing.billing_postcode | Should -BeExactly $billing_postcode
-			$newOrder.billing.billing_country | Should -BeExactly $billing_country
-			$newOrder.billing.billing_email | Should -BeExactly $billing_email
-			$newOrder.billing.billing_phone | Should -BeExactly $billing_phone
+			$newOrder.billing.first_name | Should -BeExactly $billing_first_name
+			$newOrder.billing.last_name | Should -BeExactly $billing_last_name
+			$newOrder.billing.address_1 | Should -BeExactly $billing_address_1
+			$newOrder.billing.address_2 | Should -BeExactly $billing_address_2
+			$newOrder.billing.city | Should -BeExactly $billing_city
+			$newOrder.billing.state | Should -BeExactly $billing_state
+			$newOrder.billing.postcode | Should -BeExactly $billing_postcode
+			$newOrder.billing.country | Should -BeExactly $billing_country
+			$newOrder.billing.email | Should -BeExactly $billing_email
+			$newOrder.billing.phone | Should -BeExactly $billing_phone
 		}
 	}
 }
@@ -167,6 +167,7 @@ Describe "Remove-WooCommerceOrder" {
 		
 		It "Should remove one Order completely" {
 			$script:wooCommerceOrdersArray | Should -Not -BeNullOrEmpty
+			($script:wooCommerceOrdersArray).Count | Should -BeGreaterOrEqual 2
 			$removedProduct = Remove-WooCommerceOrder -id $script:wooCommerceOrdersArray[1] -permanently
 			$removedProduct | Should -Not -BeNullOrEmpty
 			$removedProduct | Should -HaveCount 1
