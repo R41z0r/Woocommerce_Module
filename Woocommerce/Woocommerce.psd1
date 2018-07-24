@@ -77,7 +77,10 @@
 	
 	# Functions to export from this module
 	FunctionsToExport	   = @(
+		'New-WooCommerceOrder',
 		'Get-WooCommerceOrder',
+		'Get-WooCommercePaymentGateway',
+		'Set-WooCommercePaymentGateway',
 		'Get-WooCommerceProduct',
 		'New-WooCommerceProduct',
 		'Set-WooCommerceCredential',

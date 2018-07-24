@@ -25,9 +25,17 @@ $filterParameter = @(
 	"WhatIf",
 	"Confirm"
 )
+$hashTrueFalse = @{
+	"True" = $true
+	"False" = $false
+	$true   = $true
+	$false = $false
+}
 
 $script:woocommerceProducts = "wp-json/wc/v2/products"
 $script:woocommerceOrder = "wp-json/wc/v2/orders"
+$script:woocommercePaymentGateways = "wp-json/wc/v2/payment_gateways"
+
 [boolean]$script:pUseDefaultCredentials = $false
 $script:pProxy = ""
 $script:pProxyCredentials = ""
@@ -200,6 +208,159 @@ function Set-WooCommerceCredential
 
 #endregion Helper Functions
 
+function New-WooCommerceOrder
+{
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	param
+	(
+		[ValidateSet('pending', 'processing', 'on-hold', 'completed', 'cancelled', 'refunded', 'failed', IgnoreCase = $false)]
+		[System.String]$status = 'pending',
+		[ValidateSet('AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AWG', 'AZN', 'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BMD', 'BND', 'BOB', 'BRL', 'BSD', 'BTC', 'BTN', 'BWP', 'BYR', 'BZD', 'CAD', 'CDF', 'CHF', 'CLP', 'CNY', 'COP', 'CRC', 'CUC', 'CUP', 'CVE', 'CZK', 'DJF', 'DKK', 'DOP', 'DZD', 'EGP', 'ERN', 'ETB', 'EUR', 'FJD', 'FKP', 'GBP', 'GEL', 'GGP', 'GHS', 'GIP', 'GMD', 'GNF', 'GTQ', 'GYD', 'HKD', 'HNL', 'HRK', 'HTG', 'HUF', 'IDR', 'ILS', 'IMP', 'INR', 'IQD', 'IRR', 'IRT', 'ISK', 'JEP', 'JMD', 'JOD', 'JPY', 'KES', 'KGS', 'KHR', 'KMF', 'KPW', 'KRW', 'KWD', 'KYD', 'KZT', 'LAK', 'LBP', 'LKR', 'LRD', 'LSL', 'LYD', 'MAD', 'MDL', 'MGA', 'MKD', 'MMK', 'MNT', 'MOP', 'MRO', 'MUR', 'MVR', 'MWK', 'MXN', 'MYR', 'MZN', 'NAD', 'NGN', 'NIO', 'NOK', 'NPR', 'NZD', 'OMR', 'PAB', 'PEN', 'PGK', 'PHP', 'PKR', 'PLN', 'PRB', 'PYG', 'QAR', 'RON', 'RSD', 'RUB', 'RWF', 'SAR', 'SBD', 'SCR', 'SDG', 'SEK', 'SGD', 'SHP', 'SLL', 'SOS', 'SRD', 'SSP', 'STD', 'SYP', 'SZL', 'THB', 'TJS', 'TMT', 'TND', 'TOP', 'TRY', 'TTD', 'TWD', 'TZS', 'UAH', 'UGX', 'USD', 'UYU', 'UZS', 'VEF', 'VND', 'VUV', 'WST', 'XAF', 'XCD', 'XOF', 'XPF', 'YER', 'ZAR', 'ZMW')]
+		[System.String]$currency = 'USD',
+		[ValidateNotNullOrEmpty()]
+		[int]$customer_id = 0,
+		[System.String]$customer_note,
+		[System.String]$billing_first_name,
+		[System.String]$billing_last_name,
+		[System.String]$billing_company,
+		[System.String]$billing_address_1,
+		[System.String]$billing_address_2,
+		[System.String]$billing_city,
+		[System.String]$billing_state,
+		[System.String]$billing_postcode,
+		[System.String]$billing_country,
+		[System.String]$billing_email,
+		[System.String]$billing_phone,
+		[System.String]$shipping_first_name,
+		[System.String]$shipping_last_name,
+		[System.String]$shipping_company,
+		[System.String]$shipping_address_1,
+		[System.String]$shipping_address_2,
+		[System.String]$shipping_city,
+		[System.String]$shipping_state,
+		[System.String]$shipping_postcode,
+		[System.String]$shipping_country,
+		[System.String]$shipping_email,
+		[System.String]$shipping_phone,
+		[System.String]$payment_method,
+		[System.String]$payment_method_title,
+		[System.String]$transaction_id,
+		[hashtable]$meta_data,
+		[hashtable]$line_items,
+		[hashtable]$tax_lines,
+		[hashtable]$shipping_lines,
+		[hashtable]$fee_lines,
+		[hashtable]$coupon_lines,
+		[hashtable]$refunds,
+		[switch]$set_paid
+	)
+	
+	If ($PSCmdlet.ShouldProcess("Create a new order"))
+	{
+		If (Get-WooCommerceCredential)
+		{
+			$query = @{
+			}
+			$queryBilling = @{
+				
+			}
+			$url = "$script:woocommerceUrl/$script:woocommerceOrder"
+			
+			$CommandName = $PSCmdlet.MyInvocation.InvocationName
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -notin $filterParameter -and $_ -notlike "billing_*"
+			}
+			$ParameterBilling = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -like "billing_*"
+			}
+			
+			ForEach ($Parameter In $ParameterList)
+			{
+				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+				If ($var.Value -match "\d|\w")
+				{
+					$query += @{
+						$var.Name = "$($var.Value)"
+					}
+				}
+			}
+			ForEach ($Parameter In $ParameterBilling)
+			{
+				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+				If ($var.Value -match "\d|\w")
+				{
+					$name = $var.Name.Substring($var.Name.IndexOf("_") + 1)
+					$queryBilling += @{
+						$name = "$($var.Value)"
+					}
+				}
+			}
+			if ($queryBilling)
+			{
+				$query += @{
+					"billing" = $queryBilling	
+				}	
+			}
+			
+			$json = $query | ConvertTo-Json
+			
+			$paramInvokeRestMethod = @{
+				Method = 'POST'
+				Uri    = "$url"
+				Headers = $script:woocommerceBase64AuthInfo
+				Body   = ([System.Text.Encoding]::UTF8.GetBytes($json))
+				ContentType = 'application/json'
+			}
+			
+			if ($script:usePersistent)
+			{
+				if ($script:pUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+				}
+				if ($script:pProxyCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+				}
+				if ($script:pProxyUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+				}
+				if ($script:pProxy)
+				{
+					$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+				}
+			}
+			else
+			{
+				if ($UseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+				}
+				if ($ProxyCredential)
+				{
+					$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+				}
+				if ($ProxyUseDefaultCredentials)
+				{
+					$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+				}
+				if ($Proxy)
+				{
+					$paramInvokeRestMethod += @{ Proxy = $Proxy }
+				}
+			}
+			
+			$result = Invoke-RestMethod @paramInvokeRestMethod
+			If ($result)
+			{
+				Return $result
+			}
+		}
+	}
+}
+
+
 #region Order
 <#
 	.SYNOPSIS
@@ -298,6 +459,204 @@ function Get-WooCommerceOrder
 	}
 }
 #endregion Order
+
+#region Paymentgateways
+function Get-WooCommercePaymentGateway
+{
+	param
+	(
+		[Parameter(Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[Parameter(Position = 2)]
+		[switch]$all,
+		[Parameter(Position = 3)]
+		[switch]$UseDefaultCredentials,
+		[Parameter(Position = 4)]
+		[System.Uri]$Proxy,
+		[Parameter(Position = 5)]
+		[switch]$ProxyUseDefaultCredentials,
+		[Parameter(Position = 6)]
+		[System.Management.Automation.PSCredential]$ProxyCredential
+	)
+	
+	if (Get-WooCommerceCredential)
+	{
+		$url = "$script:woocommerceUrl/$script:woocommercePaymentGateways"
+		if ($id -and !$all)
+		{
+			$url += "/$id"
+		}
+		$paramInvokeRestMethod = @{
+			Method = 'GET'
+			Uri    = "$url"
+			Headers = $script:woocommerceBase64AuthInfo
+		}
+		if ($script:usePersistent)
+		{
+			if ($script:pUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($script:pProxyCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+			}
+			if ($script:pProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+			}
+			if ($script:pProxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+			}
+		}
+		else
+		{
+			if ($UseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+			}
+			if ($ProxyCredential)
+			{
+				$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+			}
+			if ($ProxyUseDefaultCredentials)
+			{
+				$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+			}
+			if ($Proxy)
+			{
+				$paramInvokeRestMethod += @{ Proxy = $Proxy }
+			}
+		}
+		
+		$result = Invoke-RestMethod @paramInvokeRestMethod
+		if ($result)
+		{
+			return $result
+		}
+	}
+}
+
+function Set-WooCommercePaymentGateway
+{
+	[CmdletBinding(SupportsShouldProcess = $true)]
+	param
+	(
+		[Parameter(Mandatory = $true,
+				   Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$id,
+		[ValidateNotNullOrEmpty()]
+		[System.String]$title,
+		[Parameter(Mandatory = $false)]
+		[ValidateNotNullOrEmpty()]
+		[System.String]$description,
+		[ValidateNotNullOrEmpty()]
+		[int]$order,
+		[ValidateNotNullOrEmpty()]
+		[ValidateSet('false', 'true', IgnoreCase = $true)]
+		[System.String]$enabled,
+		[switch]$UseDefaultCredentials,
+		[System.Uri]$Proxy,
+		[switch]$ProxyUseDefaultCredentials,
+		[System.Management.Automation.PSCredential]$ProxyCredential
+	)
+	
+	if ($pscmdlet.ShouldProcess("Modify payment gateway $id"))
+	{
+		if (Get-WooCommerceCredential)
+		{
+			$query = @{ }
+			$url = "$script:woocommerceUrl/$script:woocommercePaymentGateways/$id"
+			
+			$CommandName = $PSCmdlet.MyInvocation.InvocationName
+			$ParameterList = (Get-Command -Name $CommandName).Parameters.Keys | Where-Object {
+				$_ -notin $filterParameter
+			}
+			
+			foreach ($Parameter In $ParameterList)
+			{
+				$var = Get-Variable -Name $Parameter -ErrorAction SilentlyContinue
+				If ($var.Value -match "\d|\w")
+				{
+					$value = $var.Value
+					if ($var.Name -eq "enabled")
+					{
+						$value = $hashTrueFalse["$($var.Value)"]
+					}
+					$query += @{
+						$var.Name = "$value"
+					}
+				}
+			}
+			
+			if ($query.Count -gt 0)
+			{
+				$json = $query | ConvertTo-Json
+				
+				$paramInvokeRestMethod = @{
+					Method = 'PUT'
+					Uri    = "$url"
+					Headers = $script:woocommerceBase64AuthInfo
+					Body   = ([System.Text.Encoding]::UTF8.GetBytes($json))
+					ContentType = 'application/json'
+				}
+				
+				if ($script:usePersistent)
+				{
+					if ($script:pUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($script:pProxyCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $script:pProxyCredentials }
+					}
+					if ($script:pProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $script:pProxyUseDefaultCredentials }
+					}
+					if ($script:pProxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $script:pProxy }
+					}
+				}
+				else
+				{
+					if ($UseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ UseDefaultCredentials = $true }
+					}
+					if ($ProxyCredential)
+					{
+						$paramInvokeRestMethod += @{ ProxyCredential = $ProxyCredential }
+					}
+					if ($ProxyUseDefaultCredentials)
+					{
+						$paramInvokeRestMethod += @{ ProxyUseDefaultCredentials = $ProxyUseDefaultCredentials }
+					}
+					if ($Proxy)
+					{
+						$paramInvokeRestMethod += @{ Proxy = $Proxy }
+					}
+				}
+				
+				$result = Invoke-RestMethod @paramInvokeRestMethod
+				if ($result)
+				{
+					return $result
+				}
+			}
+			else
+			{
+				Write-Error -Message "No value provided" -Category InvalidData
+			}
+		}
+	}
+}
+#endregion Paymentgateways
 
 #region Product
 <#
@@ -446,7 +805,7 @@ function New-WooCommerceProduct
 				Method = 'POST'
 				Uri    = "$url"
 				Headers = $script:woocommerceBase64AuthInfo
-				Body   = $json
+				Body   = ([System.Text.Encoding]::UTF8.GetBytes($json))
 				ContentType = 'application/json'
 			}
 			
@@ -813,7 +1172,7 @@ function Set-WooCommerceProduct
 					Method = 'PUT'
 					Uri    = "$url"
 					Headers = $script:woocommerceBase64AuthInfo
-					Body   = $json
+					Body   = ([System.Text.Encoding]::UTF8.GetBytes($json))
 					ContentType = 'application/json'
 				}
 				
@@ -870,10 +1229,3 @@ function Set-WooCommerceProduct
 	}
 }
 #endregion Product
-
-Export-ModuleMember -Function Get-WooCommerceOrder,
-					Get-WooCommerceProduct,
-					New-WooCommerceProduct,
-					Set-WooCommerceCredential,
-					Set-WooCommerceProduct,
-					Remove-WooCommerceProduct
