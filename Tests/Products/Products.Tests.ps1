@@ -121,8 +121,7 @@ Describe "Get-WooCommerceProduct"  {
 			$product.id | Should -EQ $script:wooCommerceProductsArray[0]
 		}
 		
-		It "Should list all products"
-		{
+		It "Should list all products" {
 			$products = Get-WooCommerceProduct -all
 			$products | Should -Not -BeNullOrEmpty
 			#($products | Measure-Object).count | Should -HaveCount -BeGreaterThan $script:wooCommerceProductsArray.count
