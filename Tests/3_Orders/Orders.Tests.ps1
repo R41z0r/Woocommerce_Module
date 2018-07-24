@@ -173,10 +173,9 @@ Describe "Remove-WooCommerceOrder" {
 			$removedProduct | Should -HaveCount 1
 			$removedProduct.ID | Should -BeExactly $script:wooCommerceOrdersArray[1]
 		}
-		<#
 		It "Should remove all Orders completely" {
-			Get-WooCommerceProduct | Select-Object -Property ID | Remove-WooCommerceOrder -permanently | Out-Null
-			(Get-WooCommerceProduct | Measure-Object).Count | Should -BeExactly 0
-		}#>
+			Get-WooCommerceOrder | Select-Object -Property ID | ForEach-Object -Process { Remove-WooCommerceOrder -id $PSItem -permanently | Out-Null }
+			(Get-WooCommerceOrder | Measure-Object).Count | Should -BeExactly 0
+		}
 	}
 }
