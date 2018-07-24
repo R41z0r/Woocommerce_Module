@@ -8,7 +8,8 @@ param([switch]$Finalize)
 #Initialize some variables, move to the project root
     $PSVersion = $PSVersionTable.PSVersion.Major
     $TestFile = "TestResultsPS$PSVersion.xml"
-    $ProjectRoot = $ENV:WORKSPACE
+$ProjectRoot = $ENV:WORKSPACE
+Write-Host "Root: $env:workspace"
     Set-Location $ProjectRoot
    
 
