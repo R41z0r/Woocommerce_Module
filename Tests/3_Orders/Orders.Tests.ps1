@@ -46,7 +46,7 @@ Describe "New-WooCommerceOrder" {
 	Context "New simple Order" {
 		Set-StrictMode -Version latest
 		
-		It "Should create a new simple product" {
+		It "Should create a new simple order" {
 			$status = "on-hold"
 			$newOrder = New-WooCommerceOrder -status $status
 			$newOrder | Should -Not -BeNullOrEmpty
@@ -54,14 +54,15 @@ Describe "New-WooCommerceOrder" {
 			$script:wooCommerceOrdersArray += $newOrder.ID
 		}
 		
-        <#It "Should create a new simple product with price" {
-            $price = 10.01
-            $newProduct = New-WooCommerceProduct -name "TestPester" -regular_price $price
-            $newProduct | Should -not -BeNullOrEmpty
-            $newProduct | Should -HaveCount 1
-            $script:wooCommerceOrdersArray += $newProduct.ID
-            $newProduct.regular_price | Should -BeExactly $price
-        }#>
+		It "Should create a new simple order for customer 0" {
+			$status = "on-hold"
+			$customer = 0
+			$newOrder = New-WooCommerceOrder -status $status -customer_id 0
+			$newOrder | Should -Not -BeNullOrEmpty
+			$newOrder.status | Should -BeExactly $status
+			$newOrder.customer_id | Should -BeExactly $status
+			$script:wooCommerceOrdersArray += $newOrder.ID
+		}
 		
 		It "Should create a new order with all attributes available" {
 			$hashFalseTrue = @{
@@ -130,28 +131,28 @@ Describe "New-WooCommerceOrder" {
 		}
 	}
 }
-<#
-Describe "Get-WooCommerceProduct"  {
+
+Describe "Get-WooCommerceOrder"  {
 	
-	Context "List Product" {
+	Context "List Orders" {
 		
 		Set-StrictMode -Version latest
 		
-		It "Should list one specific product" {
-			$product = Get-WooCommerceProduct -id $script:wooCommerceOrdersArray[0]
-			$product | Should -Not -BeNullOrEmpty
-			$product | Should -HaveCount 1
-			$product.id | Should -Be $script:wooCommerceOrdersArray[0]
+		It "Should list one specific Order" {
+			$order = Get-WooCommerceOrder -id $script:wooCommerceOrdersArray[0]
+			$order | Should -Not -BeNullOrEmpty
+			$order | Should -HaveCount 1
+			$order.id | Should -Be $script:wooCommerceOrdersArray[0]
 		}
 		
-		It "Should list all products" {
-			$products = Get-WooCommerceProduct -all
-			$products | Should -Not -BeNullOrEmpty
-			($products | Measure-Object).count | Should -BeGreaterOrEqual $script:wooCommerceOrdersArray.count
-			$script:wooCommerceOrdersArray | Should -BeIn $products.id
+		It "Should list all orders" {
+			$order = Get-WooCommerceOrder -all
+			$order | Should -Not -BeNullOrEmpty
+			($order | Measure-Object).count | Should -BeGreaterOrEqual $script:wooCommerceOrdersArray.count
+			$script:wooCommerceOrdersArray | Should -BeIn $order.id
 		}
 	}
-}#>
+}
 
 Describe "Remove-WooCommerceOrder" {
 	Context "Delete one" {
@@ -159,19 +160,19 @@ Describe "Remove-WooCommerceOrder" {
 		
 		It "Should move one Order to bin" {
 			$script:wooCommerceOrdersArray | Should -Not -BeNullOrEmpty
-			$removedProduct = Remove-WooCommerceOrder -id $script:wooCommerceOrdersArray[0]
-			$removedProduct | Should -Not -BeNullOrEmpty
-			$removedProduct | Should -HaveCount 1
-			$removedProduct.ID | Should -BeExactly $script:wooCommerceOrdersArray[0]
+			$removedOrder = Remove-WooCommerceOrder -id $script:wooCommerceOrdersArray[0]
+			$removedOrder | Should -Not -BeNullOrEmpty
+			$removedOrder | Should -HaveCount 1
+			$removedOrder.ID | Should -BeExactly $script:wooCommerceOrdersArray[0]
 		}
 		
 		It "Should remove one Order completely" {
 			$script:wooCommerceOrdersArray | Should -Not -BeNullOrEmpty
 			($script:wooCommerceOrdersArray).Count | Should -BeGreaterOrEqual 2
-			$removedProduct = Remove-WooCommerceOrder -id $script:wooCommerceOrdersArray[1] -permanently
-			$removedProduct | Should -Not -BeNullOrEmpty
-			$removedProduct | Should -HaveCount 1
-			$removedProduct.ID | Should -BeExactly $script:wooCommerceOrdersArray[1]
+			$removedOrder = Remove-WooCommerceOrder -id $script:wooCommerceOrdersArray[1] -permanently
+			$removedOrder | Should -Not -BeNullOrEmpty
+			$removedOrder | Should -HaveCount 1
+			$removedOrder.ID | Should -BeExactly $script:wooCommerceOrdersArray[1]
 		}
 		It "Should remove all Orders completely" {
 			Get-WooCommerceOrder | Select-Object -Property ID | ForEach-Object -Process { Remove-WooCommerceOrder -id $PSItem.id -permanently | Out-Null }
