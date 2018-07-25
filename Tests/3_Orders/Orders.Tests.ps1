@@ -111,10 +111,6 @@ Describe "New-WooCommerceOrder" {
 			$newOrder | Should -not -BeNullOrEmpty
 			$newOrder | Should -HaveCount 1
 			$script:wooCommerceOrdersArray += $newOrder.ID
-			
-			$newOrder | Should -not -BeNullOrEmpty
-			$newOrder | Should -HaveCount 1
-			$script:wooCommerceOrdersArray += $newOrder.ID
 			$newOrder.currency | Should -BeExactly $currency
 			$newOrder.customer_id | Should -BeExactly $customer_id
 			$newOrder.customer_note | Should -BeExactly $customer_note
