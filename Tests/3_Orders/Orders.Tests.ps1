@@ -60,7 +60,7 @@ Describe "New-WooCommerceOrder" {
 			$newOrder = New-WooCommerceOrder -status $status -customer_id 0
 			$newOrder | Should -Not -BeNullOrEmpty
 			$newOrder.status | Should -BeExactly $status
-			$newOrder.customer_id | Should -BeExactly $status
+			$newOrder.customer_id | Should -BeExactly $customer
 			$script:wooCommerceOrdersArray += $newOrder.ID
 		}
 		
