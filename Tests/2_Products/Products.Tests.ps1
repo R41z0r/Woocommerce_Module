@@ -28,7 +28,7 @@ function Get-ScriptDirectory
 if(-not $PSScriptRoot)
 {
     [string]$PSScriptRoot = Get-ScriptDirectory
-    #$PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
+    $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 $PSVersion = $PSVersionTable.PSVersion.Major
 
@@ -110,14 +110,92 @@ Describe "New-WooCommerceProduct" {
 
 Describe "Get-WooCommerceProduct"  {
     
-    Context "Testfile" { 
+    Context "List Product" { 
 
         Set-StrictMode -Version latest
 
-        It "Should list all files in systemdrive" {
-            (Get-ChildItem -Path $env:systemdrive).Count | Should -BeGreaterOrEqual 0
-        }
-    }
+        It "Should list one specific product" {
+			$product = Get-WooCommerceProduct -id $script:wooCommerceProductsArray[0]
+			$product | Should -Not -BeNullOrEmpty
+			$product | Should -HaveCount 1
+			$product.id | Should -EQ $script:wooCommerceProductsArray[0]
+		}
+		
+		It "Should list all products" {
+			$products = Get-WooCommerceProduct -all
+			$products | Should -Not -BeNullOrEmpty
+			($products | Measure-Object).count | Should -BeGreaterOrEqual $script:wooCommerceProductsArray.count
+			$script:wooCommerceProductsArray | Should -BeIn $products.id
+		}
+	}
+}
+
+Describe "Set-WooCommerceProduct"  {
+	
+	Context "New simple Product" {
+		Set-StrictMode -Version latest
+		
+		It "Should change name of a simple product" {
+			$name = "NewTestName"
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -name "$name"
+			$product | Should -Not -BeNullOrEmpty
+			$product.id | Should -BeExactly $script:wooCommerceProductsArray[0]
+			$product.name | Should -BeExactly "$name"
+		}
+		
+		It "Should change a simple products price" {
+			$price = 21.95
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -regular_price $price
+			$product | Should -not -BeNullOrEmpty
+			$product | Should -HaveCount 1
+			$product.id | Should -BeExactly $script:wooCommerceProductsArray[0]
+			$product.regular_price | Should -BeExactly $price
+		}
+		
+		It "Should change a simple product with all attributes available" {
+			$hashFalseTrue = @{
+				"true"  = $true
+				"false" = $false
+			}
+			$name = "TestPesterAllAttributesNewName"
+			$type = "simple"
+			$description = "New Product Description"
+			$shortDescription = "New Short Product Description"
+			$status = "pending"
+			$slug = "tes1"
+			$featured = "$([System.String]([boolean](Get-Random 0, 1)))"
+			$catalog_visibility = "search"
+			$price = 15.96
+			$sale_price = 15
+			$date_on_sale_from = "$(Get-Date -Date (Get-Date).AddDays(2) -Format s)"
+			$date_on_sale_to = "$(Get-Date -Date (Get-Date).AddDays(4) -Format s)"
+			$virtual = "$([System.String]([boolean](Get-Random 0, 1)))"
+			$downloadable = "$([System.String]([boolean](Get-Random 0, 1)))"
+			
+			$product = Set-WooCommerceProduct -id $script:wooCommerceProductsArray[0] -name $name -type $type `
+												 -description $description -short_description $shortDescription -status $status `
+												 -slug $slug -featured $featured -catalog_visibility $catalog_visibility -regular_price $price `
+												 -sale_price $sale_price -date_on_sale_from $date_on_sale_from -date_on_sale_to $date_on_sale_to `
+												 -virtual $virtual -downloadable $downloadable
+			
+			$product | Should -not -BeNullOrEmpty
+			$product | Should -HaveCount 1
+			$product.name | Should -BeExactly $name
+			$product.type | Should -BeExactly $type
+			$product.description | Should -BeExactly $description
+			$product.short_description | Should -BeExactly $shortDescription
+			$product.status | Should -BeExactly $status
+			$product.slug | Should -BeExactly $slug
+			$product.featured | Should -BeExactly $hashFalseTrue["$featured"]
+			$product.catalog_visibility | Should -BeExactly $catalog_visibility
+			$product.regular_price | Should -BeExactly $price
+			$product.sale_price | Should -BeExactly $sale_price
+			$product.date_on_sale_from | Should -BeExactly $date_on_sale_from
+			$product.date_on_sale_to | Should -BeExactly $date_on_sale_to
+			$product.virtual | Should -BeExactly $virtual
+			$product.downloadable | Should -BeExactly $downloadable
+		}
+	}
 }
 
 Describe "Remove-WooCommerceProduct" {
